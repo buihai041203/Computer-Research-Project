@@ -3,6 +3,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\TrafficController;
 use App\Models\TrafficLog;
+use App\Http\Controllers\AgentController;
 
 
 Route::get('/traffic-stats', [TrafficController::class, 'stats']);
@@ -43,3 +44,5 @@ Route::get('/security-events', function(){
         ->get();
 
 });
+
+Route::post('/agent/collect',[AgentController::class,'collect'])->middleware('throttle:120,1');;
