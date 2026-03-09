@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Models\Domain;
+use Illuminate\Support\Str;
 
 class DomainController extends Controller
 {
@@ -27,8 +28,8 @@ class DomainController extends Controller
             : 'domain';
 
         Domain::create([
-            'domain'=>$value,
-            'type'=>$type
+            'domain'=>$request->domain,
+            'agent_key'=>Str::random(32)
         ]);
 
         return back();
