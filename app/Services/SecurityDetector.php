@@ -5,7 +5,7 @@ namespace App\Services;
 use App\Models\TrafficLog;
 use App\Models\SecurityEvent;
 use App\Services\FirewallService;
-use App\Services\TelegramService;
+use App\Jobs\SendTelegramAlert;
 
 class SecurityDetector
 {
@@ -29,13 +29,15 @@ class SecurityDetector
             // block ip
             FirewallService::block($ip, 'Too many requests');
 
-            // gửi telegram alert
-            TelegramService::send(
+            $message =
                 "⚠️ Security Alert\n\n".
                 "Possible DDoS detected\n\n".
                 "IP: $ip\n\n".
-                "Reason: Too many requests"
-            );
+                "Requests: $count\n\n".
+                "Reason: Too many requests";
+
+            // gửi telegram qua queue
+            SendTelegramAlert::dispatch($message);
 
             return true;
         }

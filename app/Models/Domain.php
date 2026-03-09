@@ -8,6 +8,7 @@ class Domain extends Model
 {
     protected $fillable = [
         'domain',
-        'status'
+        'status',
+        'agent_key'
     ];
 }
