@@ -8,32 +8,42 @@ use Illuminate\Support\Str;
 
 class DomainController extends Controller
 {
-
     public function index()
     {
-
         $domains = Domain::latest()->get();
 
-        return view('domains.index',compact('domains'));
+        return view('domains.index', compact('domains'));
+    }
 
+    public function create()
+    {
+        return view('domains.create');
     }
 
     public function store(Request $request)
     {
-
-        $value = $request->domain;
-
-        $type = filter_var($value, FILTER_VALIDATE_IP)
-            ? 'ip'
-            : 'domain';
-
-        Domain::create([
-            'domain'=>$request->domain,
-            'agent_key'=>Str::random(32)
+        $data = $request->validate([
+            'domain' => ['required', 'string', 'max:255', 'unique:domains,domain'],
+            'ip' => ['nullable', 'ip'],
         ]);
 
-        return back();
+        $type = filter_var($data['domain'], FILTER_VALIDATE_IP) ? 'ip' : 'domain';
 
+        Domain::create([
+            'domain' => $data['domain'],
+            'ip' => $data['ip'] ?? null,
+            'type' => $type,
+            'agent_key' => Str::random(32),
+        ]);
+
+        return redirect()->route('domains.index')->with('success', 'Domain added successfully.');
     }
 
+    public function destroy(Domain $domain)
+    {
+        $domain->delete();
+
+        return redirect()->route('domains.index')->with('success', 'Domain deleted.');
+    }
 }
+

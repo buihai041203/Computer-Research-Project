@@ -2,132 +2,147 @@
 
 @section('content')
 
-<h1 class="text-2xl font-bold mb-6">
-Domain Manager
-</h1>
+<div class="max-w-6xl mx-auto">
 
-<!-- ADD DOMAIN BUTTON -->
+    <!-- HEADER -->
+    <div class="flex items-center justify-between mb-8">
 
-<div class="mb-6">
+        <div>
+            <h1 class="text-3xl font-bold text-gray-800">
+                Domain Manager
+            </h1>
+            <p class="text-gray-500 mt-1">
+                Manage and monitor all domains registered in the system.
+            </p>
+        </div>
 
-<a href="/domains/create"
-class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded">
+        <a href="{{ route('domains.create') }}"
+        class="bg-blue-500 hover:bg-blue-600 text-white font-semibold px-5 py-2 rounded-lg shadow-md">
 
-+ Add Domain
+            + Add Domain
 
-</a>
+        </a>
 
-</div>
+    </div>
 
-<!-- DOMAIN LIST -->
+    <!-- SUCCESS MESSAGE -->
+    @if(session('success'))
+        <div class="bg-green-100 border border-green-300 text-green-700 p-4 rounded-lg mb-6">
+            {{ session('success') }}
+        </div>
+    @endif
 
-<div class="bg-white p-6 rounded shadow">
+    <!-- DOMAIN TABLE -->
+    <div class="bg-white shadow-xl rounded-xl overflow-hidden">
 
-@if(session('success'))
-<div class="bg-green-100 text-green-700 p-3 rounded mb-4">
-{{ session('success') }}
-</div>
-@endif
+        <table class="w-full">
 
-<table class="w-full">
+            <thead class="bg-gray-100 border-b">
 
-<thead class="border-b bg-gray-50">
+                <tr>
 
-<tr>
+                    <th class="p-4 text-left text-sm font-semibold text-gray-600">
+                        Domain
+                    </th>
 
-<th class="p-3 text-left">Domain</th>
+                    <th class="p-4 text-left text-sm font-semibold text-gray-600">
+                        Server IP
+                    </th>
 
-<th class="p-3 text-left">IP Address</th>
+                    <th class="p-4 text-left text-sm font-semibold text-gray-600">
+                        Status
+                    </th>
 
-<th class="p-3 text-left">Status</th>
+                    <th class="p-4 text-left text-sm font-semibold text-gray-600">
+                        Created
+                    </th>
 
-<th class="p-3 text-left">Created</th>
+                    <th class="p-4 text-left text-sm font-semibold text-gray-600">
+                        Actions
+                    </th>
 
-<th class="p-3 text-left">Action</th>
+                </tr>
 
-</tr>
+            </thead>
 
-</thead>
+            <tbody>
 
-<tbody>
+                @forelse($domains as $domain)
 
-@forelse($domains as $domain)
+                <tr class="border-b hover:bg-gray-50 transition">
 
-<tr class="border-b hover:bg-gray-50">
+                    <!-- DOMAIN -->
+                    <td class="p-4 font-semibold text-gray-800">
+                        {{ $domain->domain }}
+                    </td>
 
-<td class="p-3 font-semibold">
+                    <!-- IP -->
+                    <td class="p-4 text-gray-600">
+                        {{ $domain->ip ?? '-' }}
+                    </td>
 
-{{ $domain->domain }}
+                    <!-- STATUS -->
+                    <td class="p-4">
 
-</td>
+                        @if($domain->status == 'active')
 
-<td class="p-3">
+                        <span class="bg-green-100 text-green-700 text-xs font-semibold px-3 py-1 rounded-full">
+                            Active
+                        </span>
 
-{{ $domain->ip }}
+                        @else
 
-</td>
+                        <span class="bg-yellow-100 text-yellow-700 text-xs font-semibold px-3 py-1 rounded-full">
+                            Pending
+                        </span>
 
-<td class="p-3">
+                        @endif
 
-@if($domain->status == 'active')
+                    </td>
 
-<span class="text-green-600 font-semibold">
-Active
-</span>
+                    <!-- CREATED -->
+                    <td class="p-4 text-gray-500 text-sm">
+                        {{ $domain->created_at->format('Y-m-d H:i') }}
+                    </td>
 
-@else
+                    <!-- ACTION -->
+                    <td class="p-4">
 
-<span class="text-yellow-600 font-semibold">
-Pending
-</span>
+                        <form method="POST"
+                        action="{{ route('domains.destroy', $domain) }}"
+                        onsubmit="return confirm('Are you sure you want to delete this domain?')">
 
-@endif
+                        @csrf
+                        @method('DELETE')
 
-</td>
+                        <button
+                        class="text-red-500 hover:text-red-700 font-semibold">
 
-<td class="p-3 text-gray-500">
+                        Delete
 
-{{ $domain->created_at }}
+                        </button>
 
-</td>
+                        </form>
 
-<td class="p-3">
+                    </td>
 
-<form method="POST" action="/domains/{{ $domain->id }}" 
-onsubmit="return confirm('Delete this domain?')">
+                </tr>
 
-@csrf
-@method('DELETE')
+                @empty
 
-<button class="text-red-500 hover:underline">
+                <tr>
+                    <td colspan="5" class="p-8 text-center text-gray-400">
+                        No domains found.
+                    </td>
+                </tr>
 
-Delete
+                @endforelse
 
-</button>
+            </tbody>
 
-</form>
+        </table>
 
-</td>
-
-</tr>
-
-@empty
-
-<tr>
-
-<td colspan="5" class="p-4 text-center text-gray-500">
-
-No domains found.
-
-</td>
-
-</tr>
-
-@endforelse
-
-</tbody>
-
-</table>
+    </div>
 
 </div>
 

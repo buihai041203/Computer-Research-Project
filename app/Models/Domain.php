@@ -8,7 +8,9 @@ class Domain extends Model
 {
     protected $fillable = [
         'domain',
+        'ip',
         'status',
-        'agent_key'
+        'agent_key',
+        'type'
     ];
 }

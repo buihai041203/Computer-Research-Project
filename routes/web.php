@@ -22,7 +22,8 @@ Route::middleware('auth')->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
-    Route::resource('domains', DomainController::class);
+    Route::resource('domains', DomainController::class)
+        ->only(['index', 'create', 'store', 'destroy']);
 });
 
 Route::get('/traffic',[TrafficController::class,'index'])->middleware('auth');
@@ -51,8 +52,5 @@ Route::post('/firewall/block',[FirewallController::class,'block']);
 Route::delete('/firewall/{id}',[FirewallController::class,'unblock']);
 
 Route::get('/logs',[LogController::class,'index']);
-
-Route::get('/domains',[DomainController::class,'index']);
-Route::post('/domains',[DomainController::class,'store']);
 
 require __DIR__.'/auth.php';
