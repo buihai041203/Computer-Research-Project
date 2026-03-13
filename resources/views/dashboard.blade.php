@@ -2,38 +2,126 @@
 
 @section('content')
 
-<h1 class="text-2xl font-bold mb-6">
-Dashboard
+<style>
+
+body{
+background:#f1f5f9;
+}
+
+.card{
+background:white;
+border-radius:12px;
+padding:20px;
+box-shadow:0 10px 25px rgba(0,0,0,0.05);
+}
+
+.stat-card{
+color:white;
+border-radius:12px;
+padding:20px;
+}
+
+.stat-blue{background:linear-gradient(135deg,#3b82f6,#2563eb);}
+.stat-green{background:linear-gradient(135deg,#22c55e,#16a34a);}
+.stat-red{background:linear-gradient(135deg,#ef4444,#dc2626);}
+
+table{
+width:100%;
+font-size:14px;
+}
+
+th{
+text-align:left;
+padding:10px;
+color:#6b7280;
+}
+
+td{
+padding:10px;
+}
+
+tr{
+border-bottom:1px solid #eee;
+}
+
+tr:hover{
+background:#f9fafb;
+}
+
+.badge{
+padding:4px 8px;
+border-radius:6px;
+font-size:12px;
+font-weight:600;
+}
+
+.badge-human{
+background:#dcfce7;
+color:#15803d;
+}
+
+.badge-bot{
+background:#fee2e2;
+color:#dc2626;
+}
+
+.badge-low{background:#dcfce7;color:#15803d;}
+.badge-medium{background:#fef9c3;color:#ca8a04;}
+.badge-high{background:#fecaca;color:#b91c1c;}
+.badge-critical{background:#b91c1c;color:white;}
+
+.grid-3{
+display:grid;
+grid-template-columns:repeat(3,1fr);
+gap:20px;
+}
+
+.grid-2{
+display:grid;
+grid-template-columns:repeat(2,1fr);
+gap:20px;
+}
+
+</style>
+
+<div style="display:flex;flex-direction:column;gap:20px;">
+
+<h1 style="font-size:28px;font-weight:bold;">
+🛡 Security Dashboard
 </h1>
 
-<div class="grid grid-cols-3 gap-6 mb-6">
+<!-- STATS -->
 
-<div class="bg-white p-6 rounded shadow">
-<h2 class="text-gray-500">Total Visitors</h2>
-<div class="text-3xl font-bold">
+<div class="grid-3">
+
+<div class="stat-card stat-blue">
+<div>Total Visitors</div>
+<div style="font-size:32px;font-weight:bold;">
 {{ $totalVisitors }}
 </div>
 </div>
 
-<div class="bg-white p-6 rounded shadow">
-<h2 class="text-gray-500">Human Visitors</h2>
-<div class="text-3xl font-bold text-green-500">
+<div class="stat-card stat-green">
+<div>Human Visitors</div>
+<div style="font-size:32px;font-weight:bold;">
 {{ $humanVisitors }}
 </div>
 </div>
 
-<div class="bg-white p-6 rounded shadow">
-<h2 class="text-gray-500">Bot Visitors</h2>
-<div class="text-3xl font-bold text-red-500">
+<div class="stat-card stat-red">
+<div>Bot Visitors</div>
+<div style="font-size:32px;font-weight:bold;">
 {{ $botVisitors }}
 </div>
 </div>
 
 </div>
 
-<div class="bg-white p-6 rounded shadow">
+<!-- TRAFFIC -->
 
-<h2 class="mb-4 font-bold">
+<div class="card">
+
+<h2 style="margin-bottom:15px;font-weight:bold;">
 Traffic Chart
 </h2>
 
@@ -41,78 +129,83 @@ Traffic Chart
 
 </div>
 
-<div class="bg-white p-6 rounded shadow mt-6">
+<!-- TABLES -->
 
-<h2 class="font-bold mb-4">
-Top Attacker IP
+<div class="grid-2">
+
+<div class="card">
+
+<h2 style="margin-bottom:15px;font-weight:bold;">
+🚨 Top Attacker IP
 </h2>
 
-<table class="w-full">
+<table>
 
-<thead class="border-b">
+<thead>
 <tr>
-<th class="p-2 text-left">IP</th>
-<th class="p-2 text-left">Requests</th>
+<th>IP</th>
+<th>Requests</th>
 </tr>
 </thead>
 
-<tbody id="topIpTable">
-
-</tbody>
+<tbody id="topIpTable"></tbody>
 
 </table>
 
 </div>
 
-<div class="bg-white p-6 rounded shadow mt-6">
+<div class="card">
 
-<h2 class="font-bold mb-4">
-Top Countries
+<h2 style="margin-bottom:15px;font-weight:bold;">
+🌍 Top Countries
 </h2>
 
-<table class="w-full">
+<table>
 
-<thead class="border-b">
+<thead>
 <tr>
-<th class="p-2 text-left">Country</th>
-<th class="p-2 text-left">Visitors</th>
+<th>Country</th>
+<th>Visitors</th>
 </tr>
 </thead>
 
-<tbody id="countryTable">
-
-</tbody>
+<tbody id="countryTable"></tbody>
 
 </table>
 
 </div>
 
-<div class="bg-white p-6 rounded shadow mt-6">
-
-<h2 class="font-bold mb-4">
-Latest Visitors
-</h2>
 </div>
 
-<div class="bg-white p-6 rounded shadow mt-6">
+<!-- MAP -->
 
-<h2 class="font-bold mb-4">
-Live Attack Map
+<div class="card">
+
+<h2 style="margin-bottom:15px;font-weight:bold;">
+🌎 Global Attack Map
 </h2>
 
 <div id="attackMap" style="height:400px;"></div>
 
 </div>
 
-<table class="w-full">
+<!-- LATEST VISITORS -->
 
-<thead class="border-b">
+<div class="card">
+
+<h2 style="margin-bottom:15px;font-weight:bold;">
+Latest Visitors
+</h2>
+
+<table>
+
+<thead>
 <tr>
-<th class="p-2 text-left">IP</th>
-<th class="p-2 text-left">Country</th>
-<th class="p-2 text-left">Type</th>
-<th class="p-2 text-left">Threat</th>
-<th class="p-2 text-left">Time</th>
+<th>IP</th>
+<th>Country</th>
+<th>Type</th>
+<th>Threat</th>
+<th>Time</th>
 </tr>
 </thead>
 
@@ -120,46 +213,40 @@ Live Attack Map
 
 @foreach($latestVisitors as $v)
 
-<tr class="border-b">
+<tr>
 
-<td class="p-2">
-{{ $v->ip }}
-</td>
+<td>{{ $v->ip }}</td>
 
-<td class="p-2">
-{{ $v->country }}
-</td>
+<td>🌍 {{ $v->country }}</td>
 
-<td class="p-2">
+<td>
 
 @if($v->is_bot)
-<span class="text-red-500">Bot</span>
+<span class="badge badge-bot">Bot</span>
 @else
-<span class="text-green-500">Human</span>
+<span class="badge badge-human">Human</span>
 @endif
 
 </td>
 
-<td class="p-2">
+<td>
 
-@if($v->threat == 'CRITICAL')
-<span class="text-red-700 font-bold">CRITICAL</span>
+@if($v->threat=='CRITICAL')
+<span class="badge badge-critical">CRITICAL</span>
 
-@elseif($v->threat == 'HIGH')
-<span class="text-red-500">HIGH</span>
+@elseif($v->threat=='HIGH')
+<span class="badge badge-high">HIGH</span>
 
-@elseif($v->threat == 'MEDIUM')
-<span class="text-yellow-500">MEDIUM</span>
+@elseif($v->threat=='MEDIUM')
+<span class="badge badge-medium">MEDIUM</span>
 
 @else
-<span class="text-green-500">LOW</span>
+<span class="badge badge-low">LOW</span>
 @endif
 
 </td>
 
-<td class="p-2">
-{{ $v->created_at }}
-</td>
+<td>{{ $v->created_at }}</td>
 
 </tr>
 
@@ -171,28 +258,30 @@ Live Attack Map
 
 </div>
 
-<div class="bg-white p-6 rounded shadow mt-6">
+<!-- SECURITY EVENTS -->
 
-<h2 class="font-bold mb-4">
-Live Security Events
+<div class="card">
+
+<h2 style="margin-bottom:15px;font-weight:bold;">
+⚠ Live Security Events
 </h2>
 
-<table class="w-full">
+<table>
 
-<thead class="border-b">
+<thead>
 <tr>
-<th class="p-2 text-left">IP</th>
-<th class="p-2 text-left">Country</th>
-<th class="p-2 text-left">Threat</th>
-<th class="p-2 text-left">Time</th>
+<th>IP</th>
+<th>Country</th>
+<th>Threat</th>
+<th>Time</th>
 </tr>
 </thead>
 
-<tbody id="securityEvents">
-
-</tbody>
+<tbody id="securityEvents"></tbody>
 
 </table>
+
+</div>
 
 </div>
 
@@ -204,25 +293,29 @@ Live Security Events
 
 <script>
 
+/* CHART */
+
 var options = {
-    chart: {
-        type: 'line',
-        height: 350
-    },
 
-    series: [
-        { name: 'Human', data: [] },
-        { name: 'Bot', data: [] }
-    ],
+chart:{type:'area',height:350},
 
-    xaxis: {
-        categories: []
-    },
+series:[
+{name:'Human',data:[]},
+{name:'Bot',data:[]}
+],
 
-    colors: ['#22c55e','#ef4444']
+colors:['#22c55e','#ef4444'],
+
+stroke:{curve:'smooth'},
+
+xaxis:{categories:[]}
+
 };
 
-var chart = new ApexCharts(document.querySelector("#trafficChart"), options);
+var chart = new ApexCharts(
+document.querySelector("#trafficChart"),
+options
+);
 
 chart.render();
 
@@ -232,7 +325,7 @@ fetch('/api/traffic-stats')
 .then(res=>res.json())
 .then(data=>{
 
-let time = new Date().toLocaleTimeString();
+let time=new Date().toLocaleTimeString();
 
 options.series[0].data.push(data.human);
 options.series[1].data.push(data.bot);
@@ -248,27 +341,28 @@ chart.updateOptions(options);
 setInterval(loadTraffic,5000);
 
 
-// TOP IP
+/* TOP IP */
+
 function loadTopIp(){
 
 fetch('/api/top-ip')
 .then(res=>res.json())
 .then(data=>{
 
-let html = '';
+let html='';
 
 data.forEach(row=>{
 
-html += `
-<tr class="border-b">
-<td class="p-2">${row.ip}</td>
-<td class="p-2 text-red-500 font-bold">${row.total}</td>
+html+=`
+<tr>
+<td>${row.ip}</td>
+<td style="color:red;font-weight:bold;">${row.total}</td>
 </tr>
 `;
 
 });
 
-document.getElementById('topIpTable').innerHTML = html;
+document.getElementById('topIpTable').innerHTML=html;
 
 });
 
@@ -277,48 +371,44 @@ document.getElementById('topIpTable').innerHTML = html;
 loadTopIp();
 setInterval(loadTopIp,10000);
 
+
+/* COUNTRIES */
+
 function loadCountries(){
 
 fetch('/api/country-stats')
 .then(res=>res.json())
 .then(data=>{
 
-let html = '';
+let html='';
 
 data.forEach(row=>{
 
-html += `
-<tr class="border-b">
-<td class="p-2">🌍 ${row.country}</td>
-<td class="p-2 font-bold">${row.total}</td>
+html+=`
+<tr>
+<td>🌍 ${row.country}</td>
+<td>${row.total}</td>
 </tr>
 `;
 
 });
 
-document.getElementById('countryTable').innerHTML = html;
+document.getElementById('countryTable').innerHTML=html;
 
 });
 
 }
 
 loadCountries();
-
 setInterval(loadCountries,10000);
 
-// ATTACK MAP
 
-var map = new jsVectorMap({
-selector: "#attackMap",
-map: "world",
-zoomButtons: true,
+/* MAP */
 
-regionStyle: {
-initial: {
-fill: "#e5e7eb"
-}
-}
-
+var map=new jsVectorMap({
+selector:"#attackMap",
+map:"world",
+zoomButtons:true
 });
 
 function loadAttackMap(){
@@ -327,33 +417,31 @@ fetch('/api/attack-map')
 .then(res=>res.json())
 .then(data=>{
 
-let regions = {};
+let regions={};
 
 data.forEach(row=>{
 
-if(row.country == "Vietnam") regions["VN"] = row.total;
-if(row.country == "United States") regions["US"] = row.total;
-if(row.country == "China") regions["CN"] = row.total;
-if(row.country == "Singapore") regions["SG"] = row.total;
+if(row.country=="Vietnam")regions["VN"]=row.total;
+if(row.country=="United States")regions["US"]=row.total;
+if(row.country=="China")regions["CN"]=row.total;
+if(row.country=="Singapore")regions["SG"]=row.total;
 
 });
 
-map.updateSeries([
-{
-attribute: "fill",
-values: regions
-}
-]);
+map.updateSeries([{
+attribute:"fill",
+values:regions
+}]);
 
 });
 
 }
 
 loadAttackMap();
-
 setInterval(loadAttackMap,10000);
 
-// SECURITY EVENTS
+
+/* SECURITY EVENTS */
 
 function loadSecurityEvents(){
 
@@ -361,22 +449,22 @@ fetch('/api/security-events')
 .then(res=>res.json())
 .then(data=>{
 
-let html = '';
+let html='';
 
 data.forEach(row=>{
 
-html += `
-<tr class="border-b">
-<td class="p-2">${row.ip}</td>
-<td class="p-2">${row.country}</td>
-<td class="p-2 text-red-500 font-bold">${row.threat}</td>
-<td class="p-2">${row.created_at}</td>
+html+=`
+<tr>
+<td>${row.ip}</td>
+<td>${row.country}</td>
+<td style="color:red;font-weight:bold;">${row.threat}</td>
+<td>${row.created_at}</td>
 </tr>
 `;
 
 });
 
-document.getElementById('securityEvents').innerHTML = html;
+document.getElementById('securityEvents').innerHTML=html;
 
 });
 
