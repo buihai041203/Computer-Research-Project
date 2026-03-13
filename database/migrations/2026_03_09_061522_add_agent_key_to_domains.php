@@ -12,7 +12,7 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('domains', function (Blueprint $table) {
-            $table->string('agent_key')->unique()->after('domain');
+            $table->string('agent_key')->unique()->nullable()->after('domain');
 
         });
     }
@@ -23,7 +23,7 @@ return new class extends Migration
     public function down(): void
     {
         Schema::table('domains', function (Blueprint $table) {
-            //
+            $table->dropColumn('agent_key');
         });
     }
 };
