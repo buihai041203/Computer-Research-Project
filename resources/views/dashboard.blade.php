@@ -1,6 +1,125 @@
 @extends('layouts.panel')
 
 @section('content')
+<style>
+
+/* ===== PAGE BACKGROUND ===== */
+
+body{
+background:#f4f7fb;
+font-family: "Segoe UI", sans-serif;
+color:#1e293b;
+}
+
+/* ===== NAVBAR FIXED ===== */
+
+nav{
+position:sticky;
+top:0;
+z-index:1000;
+background:white;
+box-shadow:0 2px 10px rgba(0,0,0,0.05);
+}
+
+/* ===== DASHBOARD CARDS ===== */
+
+.bg-white{
+background:white;
+border-radius:12px;
+box-shadow:0 4px 14px rgba(0,0,0,0.06);
+transition:all .25s ease;
+}
+
+.bg-white:hover{
+transform:translateY(-3px);
+box-shadow:0 10px 25px rgba(0,0,0,0.08);
+}
+
+/* ===== TITLES ===== */
+
+h1{
+color:#0f172a;
+}
+
+h2{
+color:#334155;
+}
+
+/* ===== STAT NUMBERS ===== */
+
+.text-3xl{
+font-size:28px;
+font-weight:700;
+}
+
+/* ===== TABLE ===== */
+
+table{
+width:100%;
+border-collapse:collapse;
+font-size:14px;
+}
+
+thead{
+background:#f1f5f9;
+}
+
+th{
+font-weight:600;
+color:#334155;
+}
+
+th, td{
+padding:10px 12px;
+}
+
+tr{
+transition:background .2s;
+}
+
+tbody tr:hover{
+background:#f8fafc;
+}
+
+/* ===== BOT / HUMAN COLORS ===== */
+
+.text-red-500{
+color:#ef4444;
+}
+
+.text-green-500{
+color:#22c55e;
+}
+
+.text-yellow-500{
+color:#f59e0b;
+}
+
+/* ===== CHART BOX ===== */
+
+#trafficChart{
+background:#ffffff;
+border-radius:10px;
+}
+
+/* ===== MAP ===== */
+
+#attackMap{
+border-radius:10px;
+overflow:hidden;
+}
+
+/* ===== GRID RESPONSIVE ===== */
+
+@media (max-width:900px){
+
+.grid-cols-3{
+grid-template-columns:1fr;
+}
+
+}
+
+</style>
 
 <h1 class="text-2xl font-bold mb-6">
 Dashboard

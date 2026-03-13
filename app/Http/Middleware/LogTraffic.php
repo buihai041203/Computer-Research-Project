@@ -11,6 +11,7 @@ use Illuminate\Support\Facades\Cache;
 use App\Models\BlockedIP;
 use App\Services\ThreatAnalyzer;
 use App\Models\Domain;
+use Illuminate\Support\Str;
 
 class LogTraffic
 {
@@ -27,9 +28,10 @@ class LogTraffic
 
         $domain = $request->getHost();
 
-        $domainModel = Domain::firstOrCreate([
-            'domain'=>$domain
-        ]);
+        $domainModel = Domain::firstOrCreate(
+            ['domain' => $domain],
+            ['agent_key' => Str::uuid()]
+        );
 
         $agent = $request->userAgent();
 
