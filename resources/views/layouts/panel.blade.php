@@ -178,27 +178,27 @@ SmartPanel
 <ul class="p-4 space-y-2">
 
 <li class="p-2 {{ request()->is('dashboard') ? 'active' : '' }}">
-    <a href="/dashboard">📊 Dashboard</a>
+    <a href="/dashboard"> Dashboard</a>
 </li>
 
 <li class="p-2 {{ request()->is('domains') ? 'active' : '' }}">
-    <a href="/domains">🌐 Domains</a>
+    <a href="/domains"> Domains</a>
 </li>
 
 <li class="p-2 {{ request()->is('traffic') ? 'active' : '' }}">
-    <a href="/traffic">📈 Traffic</a>
+    <a href="/traffic"> Traffic</a>
 </li>
 
 <li class="p-2 {{ request()->is('security') ? 'active' : '' }}">
-    <a href="/security">🛡 Security</a>
+    <a href="/security"> Security</a>
 </li>
 
 <li class="p-2 {{ request()->is('logs') ? 'active' : '' }}">
-    <a href="/logs">📜 Logs</a>
+    <a href="/logs"> Logs</a>
 </li>
 
 <li class="p-2 {{ request()->is('firewall') ? 'active' : '' }}">
-    <a href="/firewall">🔥 Firewall</a>
+    <a href="/firewall"> Firewall</a>
 </li>
 
 </ul>
