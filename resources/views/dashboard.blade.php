@@ -1,237 +1,287 @@
 @extends('layouts.panel')
 
 @section('content')
+
 <style>
 
-/* ===== PAGE BACKGROUND ===== */
+/* ===== MODERN CYBERSECURITY UI VARIABLES ===== */
 
-body{
-background:#f4f7fb;
-font-family: "Segoe UI", sans-serif;
-color:#1e293b;
+:root {
+    --bg-main: #020617;
+    --panel-bg: rgba(15, 23, 42, 0.8);
+    --accent-blue: #38bdf8;
+    --accent-green: #10b981;
+    --accent-red: #f43f5e;
+    --accent-yellow: #fbbf24;
+    --text-bright: #f8fafc;
+    --text-dim: #94a3b8;
+    --border-color: rgba(255, 255, 255, 0.1);
 }
 
-/* ===== NAVBAR FIXED ===== */
-
-nav{
-position:sticky;
-top:0;
-z-index:1000;
-background:white;
-box-shadow:0 2px 10px rgba(0,0,0,0.05);
+body {
+    background-color: var(--bg-main) !important;
+    background-image:
+        radial-gradient(circle at 50% -20%, rgba(56,189,248,0.15), transparent),
+        linear-gradient(rgba(255,255,255,0.02) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255,255,255,0.02) 1px, transparent 1px);
+    background-size: 100% 100%, 40px 40px, 40px 40px;
+    font-family: 'Inter',"Segoe UI",sans-serif;
+    color: var(--text-bright);
 }
 
-/* ===== DASHBOARD CARDS ===== */
+/* ===== CARDS ===== */
 
 .bg-white{
-background:white;
-border-radius:12px;
-box-shadow:0 4px 14px rgba(0,0,0,0.06);
-transition:all .25s ease;
+    background: var(--panel-bg) !important;
+    backdrop-filter: blur(12px);
+    border: 1px solid var(--border-color) !important;
+    border-radius: 16px !important;
+    box-shadow: 0 10px 40px rgba(0,0,0,0.4) !important;
+    transition: all .3s;
 }
 
 .bg-white:hover{
-transform:translateY(-3px);
-box-shadow:0 10px 25px rgba(0,0,0,0.08);
+    border-color: var(--accent-blue) !important;
 }
 
-/* ===== TITLES ===== */
+/* ===== TITLE ===== */
 
 h1{
-color:#0f172a;
+    font-size:1.8rem!important;
+    font-weight:800!important;
+    background: linear-gradient(to right,#fff,var(--accent-blue));
+    -webkit-background-clip:text;
+    -webkit-text-fill-color:transparent;
 }
 
 h2{
-color:#334155;
+    color:var(--accent-blue)!important;
+    font-size:12px!important;
+    text-transform:uppercase;
+    letter-spacing:1px;
+    font-weight:700!important;
 }
 
-/* ===== STAT NUMBERS ===== */
+/* ===== STATS ===== */
 
 .text-3xl{
-font-size:28px;
-font-weight:700;
+    font-family:'JetBrains Mono',monospace;
+    font-size:34px!important;
 }
 
 /* ===== TABLE ===== */
 
 table{
-width:100%;
-border-collapse:collapse;
-font-size:14px;
+    width:100%;
+    border-collapse:separate;
+    border-spacing:0 8px;
 }
 
-thead{
-background:#f1f5f9;
+thead th{
+    color:var(--text-dim);
+    font-size:11px;
+    text-transform:uppercase;
+    padding:10px;
 }
 
-th{
-font-weight:600;
-color:#334155;
+tbody td{
+    background:rgba(255,255,255,0.03);
+    padding:12px;
 }
 
-th, td{
-padding:10px 12px;
+tbody tr:hover td{
+    background:rgba(56,189,248,0.1);
 }
 
-tr{
-transition:background .2s;
+tbody td:first-child{
+border-radius:10px 0 0 10px;
 }
 
-tbody tr:hover{
-background:#f8fafc;
+tbody td:last-child{
+border-radius:0 10px 10px 0;
 }
 
-/* ===== BOT / HUMAN COLORS ===== */
+/* ===== BADGES ===== */
 
-.text-red-500{
-color:#ef4444;
+.badge{
+padding:4px 10px;
+border-radius:6px;
+font-size:11px;
+font-weight:700;
 }
 
-.text-green-500{
-color:#22c55e;
+.badge-bot{
+background:rgba(244,63,94,0.15);
+color:var(--accent-red);
+border:1px solid var(--accent-red);
 }
 
-.text-yellow-500{
-color:#f59e0b;
+.badge-human{
+background:rgba(16,185,129,0.15);
+color:var(--accent-green);
+border:1px solid var(--accent-green);
 }
 
-/* ===== CHART BOX ===== */
-
-#trafficChart{
-background:#ffffff;
-border-radius:10px;
+.badge-critical{
+background:var(--accent-red);
+color:white;
+box-shadow:0 0 10px var(--accent-red);
 }
 
-/* ===== MAP ===== */
-
-#attackMap{
-border-radius:10px;
-overflow:hidden;
+.live-indicator{
+width:8px;
+height:8px;
+background:var(--accent-green);
+border-radius:50%;
+display:inline-block;
+margin-right:8px;
+box-shadow:0 0 10px var(--accent-green);
+animation:pulse 1.5s infinite;
 }
 
-/* ===== GRID RESPONSIVE ===== */
-
-@media (max-width:900px){
-
-.grid-cols-3{
-grid-template-columns:1fr;
+@keyframes pulse{
+0%{transform:scale(.9);opacity:.7;}
+50%{transform:scale(1.2);opacity:1;}
+100%{transform:scale(.9);opacity:.7;}
 }
 
+table th,
+table td{
+text-align:left !important;
 }
-
 </style>
 
-<h1 class="text-2xl font-bold mb-6">
-Dashboard
-</h1>
 
-<div class="grid grid-cols-3 gap-6 mb-6">
 
-<div class="bg-white p-6 rounded shadow">
-<h2 class="text-gray-500">Total Visitors</h2>
-<div class="text-3xl font-bold">
-{{ $totalVisitors }}
-</div>
+<!-- HEADER -->
+
+<div class="mb-8 flex justify-between items-end">
+
+<div>
+<h1 class="mb-1">5M SECURITY DASHBOARD</h1>
+<p class="text-sm text-dim">Intelligent Monitoring & Alert System</p>
 </div>
 
-<div class="bg-white p-6 rounded shadow">
-<h2 class="text-gray-500">Human Visitors</h2>
-<div class="text-3xl font-bold text-green-500">
-{{ $humanVisitors }}
-</div>
-</div>
-
-<div class="bg-white p-6 rounded shadow">
-<h2 class="text-gray-500">Bot Visitors</h2>
-<div class="text-3xl font-bold text-red-500">
-{{ $botVisitors }}
-</div>
+<div class="text-right text-xs text-dim">
+Last sync: <span id="last-sync">--:--:--</span>
 </div>
 
 </div>
 
-<div class="bg-white p-6 rounded shadow">
 
-<h2 class="mb-4 font-bold">
-Traffic Chart
+
+<!-- STATS -->
+
+<div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+
+<div class="bg-white p-6 border-b-4 border-blue-500">
+<h2>Total Visitors</h2>
+<div class="text-3xl mt-2">{{ number_format($totalVisitors) }}</div>
+</div>
+
+<div class="bg-white p-6 border-b-4 border-green-500">
+<h2>Human Traffic</h2>
+<div class="text-3xl text-green-500 mt-2">{{ number_format($humanVisitors) }}</div>
+</div>
+
+<div class="bg-white p-6 border-b-4 border-red-500">
+<h2>Bot Detection</h2>
+<div class="text-3xl text-red-500 mt-2">{{ number_format($botVisitors) }}</div>
+</div>
+
+</div>
+
+
+
+<!-- TRAFFIC CHART -->
+
+<div class="bg-white p-6 mb-8">
+
+<h2 class="mb-6 flex items-center">
+<span class="live-indicator"></span> Real-time Traffic Analysis
 </h2>
 
 <div id="trafficChart" style="height:350px;"></div>
 
 </div>
 
-<div class="bg-white p-6 rounded shadow mt-6">
 
-<h2 class="font-bold mb-4">
-Top Attacker IP
-</h2>
 
-<table class="w-full">
+<!-- MAP FULL WIDTH -->
 
-<thead class="border-b">
+<div class="bg-white p-6 mb-8">
+
+<h2 class="mb-4">Live Threat Map</h2>
+
+<div id="attackMap" style="height:420px;"></div>
+
+</div>
+
+
+
+<!-- TOP TABLES -->
+
+<div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+
+<div class="bg-white p-6">
+
+<h2 class="mb-4">Top Attacker IP</h2>
+
+<table>
+
+<thead>
 <tr>
-<th class="p-2 text-left">IP</th>
-<th class="p-2 text-left">Requests</th>
+<th>IP ADDRESS</th>
+<th>REQUESTS</th>
 </tr>
 </thead>
 
-<tbody id="topIpTable">
-
-</tbody>
+<tbody id="topIpTable"></tbody>
 
 </table>
 
 </div>
 
-<div class="bg-white p-6 rounded shadow mt-6">
 
-<h2 class="font-bold mb-4">
-Top Countries
-</h2>
 
-<table class="w-full">
+<div class="bg-white p-6">
 
-<thead class="border-b">
+<h2 class="mb-4">Global Traffic Origin</h2>
+
+<table>
+
+<thead>
 <tr>
-<th class="p-2 text-left">Country</th>
-<th class="p-2 text-left">Visitors</th>
+<th>COUNTRY</th>
+<th>VISITORS</th>
 </tr>
 </thead>
 
-<tbody id="countryTable">
-
-</tbody>
+<tbody id="countryTable"></tbody>
 
 </table>
 
 </div>
 
-<div class="bg-white p-6 rounded shadow mt-6">
-
-<h2 class="font-bold mb-4">
-Latest Visitors
-</h2>
 </div>
 
-<div class="bg-white p-6 rounded shadow mt-6">
 
-<h2 class="font-bold mb-4">
-Live Attack Map
-</h2>
 
-<div id="attackMap" style="height:400px;"></div>
+<!-- LATEST EVENTS -->
 
-</div>
+<div class="bg-white p-6 mt-8">
 
-<table class="w-full">
+<h2 class="mb-6">Latest Network Events</h2>
 
-<thead class="border-b">
+<table>
+
+<thead>
 <tr>
-<th class="p-2 text-left">IP</th>
-<th class="p-2 text-left">Country</th>
-<th class="p-2 text-left">Type</th>
-<th class="p-2 text-left">Threat</th>
-<th class="p-2 text-left">Time</th>
+<th>IP</th>
+<th>COUNTRY</th>
+<th>TYPE</th>
+<th>THREAT</th>
+<th>TIME</th>
 </tr>
 </thead>
 
@@ -239,33 +289,29 @@ Live Attack Map
 
 @foreach($latestVisitors as $v)
 
-<tr class="border-b">
+<tr>
 
-<td class="p-2">
-{{ $v->ip }}
-</td>
+<td class="font-mono text-blue-400">{{ $v->ip }}</td>
 
-<td class="p-2">
-{{ $v->country }}
-</td>
+<td>🌍 {{ $v->country }}</td>
 
-<td class="p-2">
+<td>
 
 @if($v->is_bot)
-<span class="text-red-500">Bot</span>
+<span class="badge badge-bot">Bot</span>
 @else
-<span class="text-green-500">Human</span>
+<span class="badge badge-human">Human</span>
 @endif
 
 </td>
 
-<td class="p-2">
+<td>
 
 @if($v->threat == 'CRITICAL')
-<span class="text-red-700 font-bold">CRITICAL</span>
+<span class="badge badge-critical">CRITICAL</span>
 
 @elseif($v->threat == 'HIGH')
-<span class="text-red-500">HIGH</span>
+<span class="text-red-500 font-bold">HIGH</span>
 
 @elseif($v->threat == 'MEDIUM')
 <span class="text-yellow-500">MEDIUM</span>
@@ -276,9 +322,7 @@ Live Attack Map
 
 </td>
 
-<td class="p-2">
-{{ $v->created_at }}
-</td>
+<td class="text-xs text-dim">{{ $v->created_at->diffForHumans() }}</td>
 
 </tr>
 
@@ -290,58 +334,37 @@ Live Attack Map
 
 </div>
 
-<div class="bg-white p-6 rounded shadow mt-6">
 
-<h2 class="font-bold mb-4">
-Live Security Events
-</h2>
-
-<table class="w-full">
-
-<thead class="border-b">
-<tr>
-<th class="p-2 text-left">IP</th>
-<th class="p-2 text-left">Country</th>
-<th class="p-2 text-left">Threat</th>
-<th class="p-2 text-left">Time</th>
-</tr>
-</thead>
-
-<tbody id="securityEvents">
-
-</tbody>
-
-</table>
-
-</div>
 
 <script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
-
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/jsvectormap/dist/css/jsvectormap.min.css">
 <script src="https://cdn.jsdelivr.net/npm/jsvectormap"></script>
 <script src="https://cdn.jsdelivr.net/npm/jsvectormap/dist/maps/world.js"></script>
 
+
+
 <script>
 
-var options = {
-    chart: {
-        type: 'line',
-        height: 350
-    },
+/* TIME */
+function updateTime(){
+document.getElementById('last-sync').innerText =
+new Date().toLocaleTimeString();
+}
 
-    series: [
-        { name: 'Human', data: [] },
-        { name: 'Bot', data: [] }
-    ],
+/* CHART */
 
-    xaxis: {
-        categories: []
-    },
-
-    colors: ['#22c55e','#ef4444']
+var options={
+chart:{type:'area',height:350,toolbar:{show:false}},
+series:[{name:'Human',data:[]},{name:'Bot',data:[]}],
+xaxis:{categories:[]},
+colors:['#10b981','#f43f5e'],
+stroke:{curve:'smooth',width:3}
 };
 
-var chart = new ApexCharts(document.querySelector("#trafficChart"), options);
+var chart=new ApexCharts(
+document.querySelector("#trafficChart"),
+options
+);
 
 chart.render();
 
@@ -351,14 +374,25 @@ fetch('/api/traffic-stats')
 .then(res=>res.json())
 .then(data=>{
 
-let time = new Date().toLocaleTimeString();
+let time=new Date().toLocaleTimeString([],{
+hour:'2-digit',minute:'2-digit'
+});
 
 options.series[0].data.push(data.human);
 options.series[1].data.push(data.bot);
 
 options.xaxis.categories.push(time);
 
+if(options.series[0].data.length>10){
+
+options.series[0].data.shift();
+options.series[1].data.shift();
+options.xaxis.categories.shift();
+
+}
+
 chart.updateOptions(options);
+updateTime();
 
 });
 
@@ -367,142 +401,42 @@ chart.updateOptions(options);
 setInterval(loadTraffic,5000);
 
 
-// TOP IP
+/* MAP */
+
+var map=new jsVectorMap({
+selector:"#attackMap",
+map:"world",
+regionStyle:{
+initial:{fill:"rgba(255,255,255,0.1)"}
+}
+});
+
+
+/* TOP IP */
+
 function loadTopIp(){
 
 fetch('/api/top-ip')
 .then(res=>res.json())
 .then(data=>{
 
-let html = '';
+let html=data.map(row=>`
 
-data.forEach(row=>{
-
-html += `
-<tr class="border-b">
-<td class="p-2">${row.ip}</td>
-<td class="p-2 text-red-500 font-bold">${row.total}</td>
+<tr>
+<td class="font-mono text-blue-300">${row.ip}</td>
+<td class="font-bold text-red-400">${row.total}</td>
 </tr>
-`;
 
-});
+`).join('');
 
-document.getElementById('topIpTable').innerHTML = html;
+document.getElementById('topIpTable').innerHTML=html;
 
 });
 
 }
 
-loadTopIp();
 setInterval(loadTopIp,10000);
-
-function loadCountries(){
-
-fetch('/api/country-stats')
-.then(res=>res.json())
-.then(data=>{
-
-let html = '';
-
-data.forEach(row=>{
-
-html += `
-<tr class="border-b">
-<td class="p-2">🌍 ${row.country}</td>
-<td class="p-2 font-bold">${row.total}</td>
-</tr>
-`;
-
-});
-
-document.getElementById('countryTable').innerHTML = html;
-
-});
-
-}
-
-loadCountries();
-
-setInterval(loadCountries,10000);
-
-// ATTACK MAP
-
-var map = new jsVectorMap({
-selector: "#attackMap",
-map: "world",
-zoomButtons: true,
-
-regionStyle: {
-initial: {
-fill: "#e5e7eb"
-}
-}
-
-});
-
-function loadAttackMap(){
-
-fetch('/api/attack-map')
-.then(res=>res.json())
-.then(data=>{
-
-let regions = {};
-
-data.forEach(row=>{
-
-if(row.country == "Vietnam") regions["VN"] = row.total;
-if(row.country == "United States") regions["US"] = row.total;
-if(row.country == "China") regions["CN"] = row.total;
-if(row.country == "Singapore") regions["SG"] = row.total;
-
-});
-
-map.updateSeries([
-{
-attribute: "fill",
-values: regions
-}
-]);
-
-});
-
-}
-
-loadAttackMap();
-
-setInterval(loadAttackMap,10000);
-
-// SECURITY EVENTS
-
-function loadSecurityEvents(){
-
-fetch('/api/security-events')
-.then(res=>res.json())
-.then(data=>{
-
-let html = '';
-
-data.forEach(row=>{
-
-html += `
-<tr class="border-b">
-<td class="p-2">${row.ip}</td>
-<td class="p-2">${row.country}</td>
-<td class="p-2 text-red-500 font-bold">${row.threat}</td>
-<td class="p-2">${row.created_at}</td>
-</tr>
-`;
-
-});
-
-document.getElementById('securityEvents').innerHTML = html;
-
-});
-
-}
-
-loadSecurityEvents();
-setInterval(loadSecurityEvents,5000);
+loadTopIp();
 
 </script>
 
