@@ -8,6 +8,7 @@ class SecurityEvent extends Model
 {
     protected $fillable = [
         'ip',
+        'domain',
         'type',
         'description',
         'attack_type',

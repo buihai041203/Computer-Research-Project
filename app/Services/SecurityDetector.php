@@ -20,11 +20,16 @@ class SecurityDetector
         if ($count > 50) {
 
             // lưu security event
-            SecurityEvent::create([
+            $event = SecurityEvent::create([
                 'ip' => $ip,
                 'type' => 'possible_ddos',
-                'description' => 'Too many requests from this IP'
+                'description' => 'Too many requests from this IP',
+                'attack_type' => 'DDoS',
+                'threat_level' => 'HIGH'
             ]);
+
+            // trigger alert for High/Critical threats (observer in AppServiceProvider handles it)
+            // AlertService::sendSecurityAlert($event); // optional, event observer already does this
 
             // block ip
             FirewallService::block($ip, 'Too many requests');

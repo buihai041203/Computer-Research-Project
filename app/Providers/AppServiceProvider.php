@@ -2,6 +2,8 @@
 
 namespace App\Providers;
 
+use App\Models\SecurityEvent;
+use App\Services\AlertService;
 use Illuminate\Support\ServiceProvider;
 
 class AppServiceProvider extends ServiceProvider
@@ -19,6 +21,10 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        //
+        SecurityEvent::created(function (SecurityEvent $event) {
+            if (in_array($event->threat_level, ['HIGH', 'CRITICAL'])) {
+                AlertService::sendSecurityAlert($event);
+            }
+        });
     }
 }
