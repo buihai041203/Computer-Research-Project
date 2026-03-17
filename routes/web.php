@@ -24,6 +24,7 @@ Route::middleware('auth')->group(function () {
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
     Route::resource('domains', DomainController::class);
+    Route::post('/domains/{id}/toggle', [DomainController::class, 'toggle'])->name('domains.toggle');
 });
 
 Route::get('/traffic',[TrafficController::class,'index'])->middleware('auth');
@@ -64,3 +65,5 @@ Route::post('/domains', [App\Http\Controllers\DomainController::class, 'store'])
 // THÊM DÒNG NÀY ĐỂ NÚT DELETE HOẠT ĐỘNG
 Route::delete('/domains/{id}', [App\Http\Controllers\DomainController::class, 'destroy']);
 require __DIR__.'/auth.php';
+
+Route::post('/domains/{id}/toggle', [\App\Http\Controllers\DomainController::class, 'toggle']);
