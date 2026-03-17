@@ -9,6 +9,8 @@ class Domain extends Model
     protected $fillable = [
         'domain',
         'status',
-        'agent_key'
+        'agent_key',
+        'root_path',   // Thêm dòng này
+        'php_version', // Thêm dòng này
     ];
 }
