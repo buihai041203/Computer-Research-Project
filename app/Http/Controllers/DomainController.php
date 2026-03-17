@@ -15,30 +15,26 @@ class DomainController extends Controller
     }
 
     public function store(Request $request)
-    {
-        // 1. Validate dữ liệu
-        $request->validate([
-            'domain' => 'required|unique:domains,domain',
-            'php_version' => 'required'
-        ]);
+{
+    $request->validate([
+        'domain' => 'required|unique:domains,domain',
+        // 'php_version' => 'required' // Có thể bỏ validate này nếu muốn hoàn toàn auto
+    ]);
 
-        $value = $request->domain;
-        $type = filter_var($value, FILTER_VALIDATE_IP) ? 'ip' : 'domain';
-        
-        // 2. Tự động sinh Root Path
-        $rootPath = '/var/www/' . $request->domain;
+    // Ép kiểu luôn về 8.4 hoặc lấy từ request nếu sau này muốn mở lại
+    $phpVersion = $request->php_version ?? '8.4'; 
+    $rootPath = '/var/www/' . $request->domain;
 
-        // 3. Lưu vào Database
-        Domain::create([
-            'domain' => $request->domain,
-            'agent_key' => Str::random(32),
-            'root_path' => $rootPath,
-            'php_version' => $request->php_version,
-            'status' => 'pending_setup' // Đổi status để nhận diện web mới
-        ]);
+    Domain::create([
+        'domain' => $request->domain,
+        'agent_key' => Str::random(32),
+        'root_path' => $rootPath,
+        'php_version' => $phpVersion, // Sẽ luôn là 8.4
+        'status' => 'pending_setup'
+    ]);
 
-        return back()->with('success', 'Domain added successfully!');
-    }
+    return back()->with('success', 'Domain added successfully with PHP 8.4!');
+}
 
     // Hàm mới để xử lý Xóa
     public function destroy($id)
@@ -47,5 +43,11 @@ class DomainController extends Controller
         $domain->delete();
         
         return back()->with('success', 'Domain deleted successfully!');
+    }
+    public function toggle($id) {
+        $domain = Domain::findOrFail($id);
+        $domain->is_active = !($domain->is_active ?? true);
+        $domain->save();
+        return back()->with('success', 'Status updated!');
     }
 }
