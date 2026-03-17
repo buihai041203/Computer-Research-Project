@@ -12,7 +12,7 @@ class Kernel extends ConsoleKernel
     {
         // Task chạy tự động
 
-        $schedule->command('logs:cleanup')->daily();
+        $schedule->command('app:cleanup-logs')->daily();
 
     }
 

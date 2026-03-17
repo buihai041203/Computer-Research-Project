@@ -6,6 +6,8 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use App\Models\Plan;
+use App\Models\Domain;
 
 class User extends Authenticatable
 {
@@ -21,7 +23,32 @@ class User extends Authenticatable
         'name',
         'email',
         'password',
+        'role',
+        'plan_id',
     ];
+
+    public function plan()
+    {
+        return $this->belongsTo(Plan::class);
+    }
+
+    public function canCreateDomain(): bool
+    {
+        $plan = $this->plan;
+
+        if (! $plan) {
+            return false;
+        }
+
+        $domainCount = $this->domains()->count();
+
+        return $domainCount < $plan->max_domains;
+    }
+
+    public function domains()
+    {
+        return $this->hasMany(Domain::class);
+    }
 
     /**
      * The attributes that should be hidden for serialization.

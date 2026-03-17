@@ -7,11 +7,13 @@ use Illuminate\Database\Eloquent\Model;
 class TrafficLog extends Model
 {
     protected $fillable = [
-    'domain',
-    'ip',
-    'user_agent',
-    'type'
-];
+        'domain_id',
+        'domain',
+        'ip',
+        'country',
+        'user_agent',
+        'type'
+    ];
 
 public function domain()
 {

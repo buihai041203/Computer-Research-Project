@@ -123,4 +123,6 @@ return [
         'store' => env('APP_MAINTENANCE_STORE', 'database'),
     ],
 
+    'enable_firewall_commands' => env('ENABLE_FIREWALL_COMMANDS', false),
+
 ];

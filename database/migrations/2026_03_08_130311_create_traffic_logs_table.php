@@ -15,15 +15,21 @@ return new class extends Migration
 
             $table->id();
 
+            $table->foreignId('domain_id')->nullable()->constrained('domains')->nullOnDelete();
+
             $table->string('domain');
 
             $table->ipAddress('ip');
+
+            $table->string('country')->nullable();
 
             $table->string('user_agent')->nullable();
 
             $table->string('type')->default('human');
 
             $table->timestamps();
+
+            $table->index(['ip', 'created_at']);
 
         });
     }

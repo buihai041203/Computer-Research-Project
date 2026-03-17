@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
 use App\Models\BlockedIP;
 
 class FirewallController extends Controller
@@ -17,10 +18,18 @@ class FirewallController extends Controller
 
     public function block(Request $request)
     {
-        BlockedIP::create([
-            'ip'=>$request->ip,
-            'reason'=>$request->reason
+        $request->validate([
+            'ip' => ['required', 'ip'],
+            'reason' => ['nullable', 'string', 'max:255'],
         ]);
+
+        BlockedIP::firstOrCreate([
+            'ip' => $request->ip,
+        ], [
+            'reason' => $request->reason,
+        ]);
+
+        Cache::forget('blocked_ips_list');
 
         return back();
     }
@@ -28,6 +37,8 @@ class FirewallController extends Controller
     public function unblock($id)
     {
         BlockedIP::findOrFail($id)->delete();
+
+        Cache::forget('blocked_ips_list');
 
         return back();
     }

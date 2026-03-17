@@ -17,11 +17,21 @@ return new class extends Migration
 
             $table->ipAddress('ip');
 
+            $table->string('domain')->nullable();
+
             $table->string('type');
+
+            $table->string('attack_type')->nullable();
+
+            $table->string('threat_level')->nullable();
 
             $table->text('description');
 
+            $table->json('ai_analysis')->nullable();
+
             $table->timestamps();
+
+            $table->index(['ip', 'threat_level']);
 
         });
     }
