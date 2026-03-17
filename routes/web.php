@@ -9,6 +9,7 @@ use App\Models\TrafficLog;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\FirewallController;
 use App\Http\Controllers\LogController;
+use App\Http\Controllers\WebsiteController;
 
 Route::get('/', function () {
     return view('welcome');
@@ -54,5 +55,12 @@ Route::get('/logs',[LogController::class,'index']);
 
 Route::get('/domains',[DomainController::class,'index']);
 Route::post('/domains',[DomainController::class,'store']);
+// Đường dẫn vào list (bạn đã có sẵn)
+Route::get('/domains', [App\Http\Controllers\DomainController::class, 'index']);
 
+// Đường dẫn tạo mới (bạn đã có sẵn)
+Route::post('/domains', [App\Http\Controllers\DomainController::class, 'store']);
+
+// THÊM DÒNG NÀY ĐỂ NÚT DELETE HOẠT ĐỘNG
+Route::delete('/domains/{id}', [App\Http\Controllers\DomainController::class, 'destroy']);
 require __DIR__.'/auth.php';
