@@ -2,6 +2,191 @@
 
 @section('content')
 
+<style>
+
+/* ===== MODERN CYBERSECURITY UI VARIABLES ===== */
+
+:root {
+    --bg-main: #020617;
+    --panel-bg: rgba(15, 23, 42, 0.8);
+    --accent-blue: #38bdf8;
+    --accent-green: #10b981;
+    --accent-red: #f43f5e;
+    --accent-yellow: #fbbf24;
+    --text-bright: #f8fafc;
+    --text-dim: #94a3b8;
+    --border-color: rgba(255, 255, 255, 0.1);
+}
+
+body {
+    background-color: var(--bg-main) !important;
+    background-image:
+        radial-gradient(circle at 50% -20%, rgba(56,189,248,0.15), transparent),
+        linear-gradient(rgba(255,255,255,0.02) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255,255,255,0.02) 1px, transparent 1px);
+    background-size: 100% 100%, 40px 40px, 40px 40px;
+    font-family: 'Inter',"Segoe UI",sans-serif;
+    color: var(--text-bright);
+}
+
+/* ===== CARDS ===== */
+
+.bg-white{
+    background: var(--panel-bg) !important;
+    backdrop-filter: blur(12px);
+    border: 1px solid var(--border-color) !important;
+    border-radius: 16px !important;
+    box-shadow: 0 10px 40px rgba(0,0,0,0.4) !important;
+    transition: all .3s;
+}
+
+.bg-white:hover{
+    border-color: var(--accent-blue) !important;
+}
+
+/* ===== TITLE ===== */
+
+h1{
+    font-size:1.8rem!important;
+    font-weight:800!important;
+    background: linear-gradient(to right,#fff,var(--accent-blue));
+    -webkit-background-clip:text;
+    -webkit-text-fill-color:transparent;
+}
+
+h2{
+    color:var(--accent-blue)!important;
+    font-size:12px!important;
+    text-transform:uppercase;
+    letter-spacing:1px;
+    font-weight:700!important;
+}
+
+/* ===== STATS ===== */
+
+.text-3xl{
+    font-family:'JetBrains Mono',monospace;
+    font-size:34px!important;
+}
+
+/* ===== TABLE ===== */
+
+table{
+    width:100%;
+    border-collapse:separate;
+    border-spacing:0 8px;
+}
+
+thead th{
+    color:var(--text-dim);
+    font-size:11px;
+    text-transform:uppercase;
+    padding:10px;
+}
+
+tbody td{
+    background:rgba(255,255,255,0.03);
+    padding:12px;
+}
+
+tbody tr:hover td{
+    background:rgba(56,189,248,0.1);
+}
+
+tbody td:first-child{
+border-radius:10px 0 0 10px;
+}
+
+tbody td:last-child{
+border-radius:0 10px 10px 0;
+}
+
+/* ===== BADGES ===== */
+
+.badge{
+padding:4px 10px;
+border-radius:6px;
+font-size:11px;
+font-weight:700;
+}
+
+.badge-bot{
+background:rgba(244,63,94,0.15);
+color:var(--accent-red);
+border:1px solid var(--accent-red);
+}
+
+.badge-human{
+background:rgba(16,185,129,0.15);
+color:var(--accent-green);
+border:1px solid var(--accent-green);
+}
+
+.badge-critical{
+background:var(--accent-red);
+color:white;
+box-shadow:0 0 10px var(--accent-red);
+}
+
+.live-indicator{
+width:8px;
+height:8px;
+background:var(--accent-green);
+border-radius:50%;
+display:inline-block;
+margin-right:8px;
+box-shadow:0 0 10px var(--accent-green);
+animation:pulse 1.5s infinite;
+}
+
+@keyframes pulse{
+0%{transform:scale(.9);opacity:.7;}
+50%{transform:scale(1.2);opacity:1;}
+100%{transform:scale(.9);opacity:.7;}
+}
+
+table th,
+table td{
+text-align:left !important;
+}
+/* ===== SYSTEM MONITORING ADD-ON ===== */
+.sys-card {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    padding: 1.25rem !important;
+}
+
+.sys-icon {
+    width: 45px;
+    height: 45px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 800;
+    font-size: 12px;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid var(--border-color);
+}
+
+.progress-container {
+    width: 100%;
+    height: 6px;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 10px;
+    margin-top: 8px;
+    overflow: hidden;
+}
+
+.progress-bar {
+    height: 100%;
+    border-radius: 10px;
+    transition: width 0.5s ease;
+}
+</style>
+
+
 <h1 class="text-2xl font-bold mb-6">
 Dashboard
 </h1>
