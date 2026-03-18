@@ -9,6 +9,7 @@ use App\Models\TrafficLog;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\FirewallController;
 use App\Http\Controllers\LogController;
+use App\Http\Controllers\WebsiteController;
 
 Route::get('/', function () {
     return view('welcome');
@@ -23,6 +24,7 @@ Route::middleware('auth')->group(function () {
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
     Route::resource('domains', DomainController::class);
+    Route::post('/domains/{id}/toggle', [DomainController::class, 'toggle'])->name('domains.toggle');
 });
 
 Route::get('/traffic',[TrafficController::class,'index'])->middleware('auth');
@@ -54,5 +56,14 @@ Route::get('/logs',[LogController::class,'index']);
 
 Route::get('/domains',[DomainController::class,'index']);
 Route::post('/domains',[DomainController::class,'store']);
+// Đường dẫn vào list (bạn đã có sẵn)
+Route::get('/domains', [App\Http\Controllers\DomainController::class, 'index']);
 
+// Đường dẫn tạo mới (bạn đã có sẵn)
+Route::post('/domains', [App\Http\Controllers\DomainController::class, 'store']);
+
+// THÊM DÒNG NÀY ĐỂ NÚT DELETE HOẠT ĐỘNG
+Route::delete('/domains/{id}', [App\Http\Controllers\DomainController::class, 'destroy']);
 require __DIR__.'/auth.php';
+
+Route::post('/domains/{id}/toggle', [\App\Http\Controllers\DomainController::class, 'toggle']);
