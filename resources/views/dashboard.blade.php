@@ -187,136 +187,142 @@ text-align:left !important;
 </style>
 
 
+<h1 class="text-2xl font-bold mb-6">
+Dashboard
+</h1>
 
-<!-- HEADER -->
+<div class="grid grid-cols-3 gap-6 mb-6">
 
-<div class="mb-8 flex justify-between items-end">
-
-<div>
-<h1 class="mb-1">5M SECURITY DASHBOARD</h1>
-<p class="text-sm text-dim">Intelligent Monitoring & Alert System</p>
+<div class="bg-white p-6 rounded shadow">
+<h2 class="text-gray-500">Total Visitors</h2>
+<div class="text-3xl font-bold">
+{{ $totalVisitors }}
+</div>
 </div>
 
-<div class="text-right text-xs text-dim">
-Last sync: <span id="last-sync">--:--:--</span>
+<div class="bg-white p-6 rounded shadow">
+<h2 class="text-gray-500">Human Visitors</h2>
+<div class="text-3xl font-bold text-green-500">
+{{ $humanVisitors }}
+</div>
+</div>
+
+<div class="bg-white p-6 rounded shadow">
+<h2 class="text-gray-500">Bot Visitors</h2>
+<div class="text-3xl font-bold text-red-500">
+{{ $botVisitors }}
+</div>
+</div>
+
+<div class="grid grid-cols-2 gap-6 mb-6">
+
+    <div class="bg-white p-6 rounded shadow">
+        <div class="flex justify-between items-center mb-2">
+            <h2 class="text-gray-500 font-semibold uppercase text-xs">CPU Usage</h2>
+            <div id="cpuUsage" class="text-3xl font-bold text-blue-500">0%</div>
+        </div>
+        <div class="w-full bg-gray-200 rounded-full h-2">
+            <div id="cpuBar" class="bg-blue-500 h-2 rounded-full" style="width: 0%"></div>
+        </div>
+    </div>
+
+    <div class="bg-white p-6 rounded shadow">
+        <div class="flex justify-between items-center mb-2">
+            <h2 class="text-gray-500 font-semibold uppercase text-xs">RAM Usage</h2>
+            <div id="ramUsage" class="text-3xl font-bold text-purple-500">0%</div>
+        </div>
+        <div class="w-full bg-gray-200 rounded-full h-2">
+            <div id="ramBar" class="bg-purple-500 h-2 rounded-full" style="width: 0%"></div>
+        </div>
+    </div>
+
 </div>
 
 </div>
 
+<div class="bg-white p-6 rounded shadow">
 
-
-<!-- STATS -->
-
-<div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-
-<div class="bg-white p-6 border-b-4 border-blue-500">
-<h2>Total Visitors</h2>
-<div class="text-3xl mt-2">{{ number_format($totalVisitors) }}</div>
-</div>
-
-<div class="bg-white p-6 border-b-4 border-green-500">
-<h2>Human Traffic</h2>
-<div class="text-3xl text-green-500 mt-2">{{ number_format($humanVisitors) }}</div>
-</div>
-
-<div class="bg-white p-6 border-b-4 border-red-500">
-<h2>Bot Detection</h2>
-<div class="text-3xl text-red-500 mt-2">{{ number_format($botVisitors) }}</div>
-</div>
-
-</div>
-
-
-
-<!-- TRAFFIC CHART -->
-
-<div class="bg-white p-6 mb-8">
-
-<h2 class="mb-6 flex items-center">
-<span class="live-indicator"></span> Real-time Traffic Analysis
+<h2 class="mb-4 font-bold">
+Traffic Chart
 </h2>
 
 <div id="trafficChart" style="height:350px;"></div>
 
 </div>
 
+<div class="bg-white p-6 rounded shadow mt-6">
 
+<h2 class="font-bold mb-4">
+Top Attacker IP
+</h2>
 
-<!-- MAP FULL WIDTH -->
+<table class="w-full">
 
-<div class="bg-white p-6 mb-8">
-
-<h2 class="mb-4">Live Threat Map</h2>
-
-<div id="attackMap" style="height:420px;"></div>
-
-</div>
-
-
-
-<!-- TOP TABLES -->
-
-<div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
-
-<div class="bg-white p-6">
-
-<h2 class="mb-4">Top Attacker IP</h2>
-
-<table>
-
-<thead>
+<thead class="border-b">
 <tr>
-<th>IP ADDRESS</th>
-<th>REQUESTS</th>
+<th class="p-2 text-left">IP</th>
+<th class="p-2 text-left">Requests</th>
 </tr>
 </thead>
 
-<tbody id="topIpTable"></tbody>
+<tbody id="topIpTable">
+
+</tbody>
 
 </table>
 
 </div>
 
+<div class="bg-white p-6 rounded shadow mt-6">
 
+<h2 class="font-bold mb-4">
+Top Countries
+</h2>
 
-<div class="bg-white p-6">
+<table class="w-full">
 
-<h2 class="mb-4">Global Traffic Origin</h2>
-
-<table>
-
-<thead>
+<thead class="border-b">
 <tr>
-<th>COUNTRY</th>
-<th>VISITORS</th>
+<th class="p-2 text-left">Country</th>
+<th class="p-2 text-left">Visitors</th>
 </tr>
 </thead>
 
-<tbody id="countryTable"></tbody>
+<tbody id="countryTable">
+
+</tbody>
 
 </table>
 
 </div>
 
+<div class="bg-white p-6 rounded shadow mt-6">
+
+<h2 class="font-bold mb-4">
+Latest Visitors
+</h2>
 </div>
 
+<div class="bg-white p-6 rounded shadow mt-6">
 
+<h2 class="font-bold mb-4">
+Live Attack Map
+</h2>
 
-<!-- LATEST EVENTS -->
+<div id="attackMap" style="height:400px;"></div>
 
-<div class="bg-white p-6 mt-8">
+</div>
 
-<h2 class="mb-6">Latest Network Events</h2>
+<table class="w-full">
 
-<table>
-
-<thead>
+<thead class="border-b">
 <tr>
-<th>IP</th>
-<th>COUNTRY</th>
-<th>TYPE</th>
-<th>THREAT</th>
-<th>TIME</th>
+<th class="p-2 text-left">IP</th>
+<th class="p-2 text-left">Country</th>
+<th class="p-2 text-left">Type</th>
+<th class="p-2 text-left">Threat</th>
+<th class="p-2 text-left">Time</th>
+<th class="p-2 text-left">Action</th>
 </tr>
 </thead>
 
@@ -324,29 +330,33 @@ Last sync: <span id="last-sync">--:--:--</span>
 
 @foreach($latestVisitors as $v)
 
-<tr>
+<tr class="border-b">
 
-<td class="font-mono text-blue-400">{{ $v->ip }}</td>
+<td class="p-2">
+{{ $v->ip }}
+</td>
 
-<td>🌍 {{ $v->country }}</td>
+<td class="p-2">
+{{ $v->country }}
+</td>
 
-<td>
+<td class="p-2">
 
 @if($v->is_bot)
-<span class="badge badge-bot">Bot</span>
+<span class="text-red-500">Bot</span>
 @else
-<span class="badge badge-human">Human</span>
+<span class="text-green-500">Human</span>
 @endif
 
 </td>
 
-<td>
+<td class="p-2">
 
 @if($v->threat == 'CRITICAL')
-<span class="badge badge-critical">CRITICAL</span>
+<span class="text-red-700 font-bold">CRITICAL</span>
 
 @elseif($v->threat == 'HIGH')
-<span class="text-red-500 font-bold">HIGH</span>
+<span class="text-red-500">HIGH</span>
 
 @elseif($v->threat == 'MEDIUM')
 <span class="text-yellow-500">MEDIUM</span>
@@ -357,7 +367,15 @@ Last sync: <span id="last-sync">--:--:--</span>
 
 </td>
 
-<td class="text-xs text-dim">{{ $v->created_at->diffForHumans() }}</td>
+<td class="p-2">
+{{ $v->created_at }}
+</td>
+
+<td class="p-2">
+    <button onclick="blockIp('{{ $v->ip }}')" class="bg-red-500 text-white px-2 py-1 rounded text-xs">
+        Block
+    </button>
+</td>
 
 </tr>
 
@@ -369,37 +387,58 @@ Last sync: <span id="last-sync">--:--:--</span>
 
 </div>
 
+<div class="bg-white p-6 rounded shadow mt-6">
 
+<h2 class="font-bold mb-4">
+Live Security Events
+</h2>
+
+<table class="w-full">
+
+<thead class="border-b">
+<tr>
+<th class="p-2 text-left">IP</th>
+<th class="p-2 text-left">Country</th>
+<th class="p-2 text-left">Threat</th>
+<th class="p-2 text-left">Time</th>
+</tr>
+</thead>
+
+<tbody id="securityEvents">
+
+</tbody>
+
+</table>
+
+</div>
 
 <script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
+
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/jsvectormap/dist/css/jsvectormap.min.css">
 <script src="https://cdn.jsdelivr.net/npm/jsvectormap"></script>
 <script src="https://cdn.jsdelivr.net/npm/jsvectormap/dist/maps/world.js"></script>
 
-
-
 <script>
 
-/* TIME */
-function updateTime(){
-document.getElementById('last-sync').innerText =
-new Date().toLocaleTimeString();
-}
+var options = {
+    chart: {
+        type: 'line',
+        height: 350
+    },
 
-/* CHART */
+    series: [
+        { name: 'Human', data: [] },
+        { name: 'Bot', data: [] }
+    ],
 
-var options={
-chart:{type:'area',height:350,toolbar:{show:false}},
-series:[{name:'Human',data:[]},{name:'Bot',data:[]}],
-xaxis:{categories:[]},
-colors:['#10b981','#f43f5e'],
-stroke:{curve:'smooth',width:3}
+    xaxis: {
+        categories: []
+    },
+
+    colors: ['#22c55e','#ef4444']
 };
 
-var chart=new ApexCharts(
-document.querySelector("#trafficChart"),
-options
-);
+var chart = new ApexCharts(document.querySelector("#trafficChart"), options);
 
 chart.render();
 
@@ -409,25 +448,14 @@ fetch('/api/traffic-stats')
 .then(res=>res.json())
 .then(data=>{
 
-let time=new Date().toLocaleTimeString([],{
-hour:'2-digit',minute:'2-digit'
-});
+let time = new Date().toLocaleTimeString();
 
 options.series[0].data.push(data.human);
 options.series[1].data.push(data.bot);
 
 options.xaxis.categories.push(time);
 
-if(options.series[0].data.length>10){
-
-options.series[0].data.shift();
-options.series[1].data.shift();
-options.xaxis.categories.shift();
-
-}
-
 chart.updateOptions(options);
-updateTime();
 
 });
 
@@ -436,42 +464,165 @@ updateTime();
 setInterval(loadTraffic,5000);
 
 
-/* MAP */
-
-var map=new jsVectorMap({
-selector:"#attackMap",
-map:"world",
-regionStyle:{
-initial:{fill:"rgba(255,255,255,0.1)"}
-}
-});
-
-
-/* TOP IP */
-
+// TOP IP
 function loadTopIp(){
 
 fetch('/api/top-ip')
 .then(res=>res.json())
 .then(data=>{
 
-let html=data.map(row=>`
+let html = '';
 
-<tr>
-<td class="font-mono text-blue-300">${row.ip}</td>
-<td class="font-bold text-red-400">${row.total}</td>
+data.forEach(row=>{
+
+html += `
+<tr class="border-b">
+<td class="p-2">${row.ip}</td>
+<td class="p-2 text-red-500 font-bold">${row.total}</td>
 </tr>
+`;
 
-`).join('');
+});
 
-document.getElementById('topIpTable').innerHTML=html;
+document.getElementById('topIpTable').innerHTML = html;
 
 });
 
 }
 
-setInterval(loadTopIp,10000);
 loadTopIp();
+setInterval(loadTopIp,10000);
+
+function loadCountries(){
+
+fetch('/api/country-stats')
+.then(res=>res.json())
+.then(data=>{
+
+let html = '';
+
+data.forEach(row=>{
+
+html += `
+<tr class="border-b">
+<td class="p-2">🌍 ${row.country}</td>
+<td class="p-2 font-bold">${row.total}</td>
+</tr>
+`;
+
+});
+
+document.getElementById('countryTable').innerHTML = html;
+
+});
+
+}
+
+loadCountries();
+
+setInterval(loadCountries,10000);
+
+// ATTACK MAP
+
+var map = new jsVectorMap({
+selector: "#attackMap",
+map: "world",
+zoomButtons: true,
+
+regionStyle: {
+initial: {
+fill: "#e5e7eb"
+}
+}
+
+});
+
+function loadAttackMap(){
+
+fetch('/api/attack-map')
+.then(res=>res.json())
+.then(data=>{
+
+let regions = {};
+
+data.forEach(row=>{
+
+if(row.country == "Vietnam") regions["VN"] = row.total;
+if(row.country == "United States") regions["US"] = row.total;
+if(row.country == "China") regions["CN"] = row.total;
+if(row.country == "Singapore") regions["SG"] = row.total;
+
+});
+
+map.updateSeries([
+{
+attribute: "fill",
+values: regions
+}
+]);
+
+});
+
+}
+
+loadAttackMap();
+
+setInterval(loadAttackMap,10000);
+
+// SECURITY EVENTS
+
+function loadSecurityEvents(){
+
+fetch('/api/security-events')
+.then(res=>res.json())
+.then(data=>{
+
+let html = '';
+
+data.forEach(row=>{
+
+html += `
+<tr class="border-b">
+<td class="p-2">${row.ip}</td>
+<td class="p-2">${row.country}</td>
+<td class="p-2 text-red-500 font-bold">${row.threat}</td>
+<td class="p-2">${row.created_at}</td>
+</tr>
+`;
+
+});
+
+document.getElementById('securityEvents').innerHTML = html;
+
+});
+
+}
+
+loadSecurityEvents();
+setInterval(loadSecurityEvents,5000);
+
+// SYSTEM MONITOR
+
+setInterval(() => {
+    fetch('/api/system-stats')
+        .then(res => res.json())
+        .then(data => {
+            document.getElementById('cpuUsage').innerText = data.cpu + '%';
+            document.getElementById('ramUsage').innerText = data.ram + '%';
+        });
+}, 3000); // Cập nhật sau mỗi 3 giây
+
+function blockIp(ip) {
+    if(confirm('Bạn có chắc muốn chặn IP ' + ip + ' không?')) {
+        fetch('/api/firewall/block', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ ip: ip })
+        })
+        .then(res => res.json())
+        .then(data => alert(data.message));
+    }
+}
 
 </script>
 
