@@ -3,15 +3,13 @@
 @section('content')
 
 <style>
-/* ===== MODERN CYBERSECURITY UI VARIABLES ===== */
-
+/* ===== ĐỒNG BỘ DARK GRID UI ===== */
 :root {
     --bg-main: #020617;
     --panel-bg: rgba(15, 23, 42, 0.8);
     --accent-blue: #38bdf8;
     --accent-green: #10b981;
     --accent-red: #f43f5e;
-    --accent-yellow: #fbbf24;
     --text-bright: #f8fafc;
     --text-dim: #94a3b8;
     --border-color: rgba(255, 255, 255, 0.1);
@@ -24,181 +22,137 @@ body {
         linear-gradient(rgba(255,255,255,0.02) 1px, transparent 1px),
         linear-gradient(90deg, rgba(255,255,255,0.02) 1px, transparent 1px);
     background-size: 100% 100%, 40px 40px, 40px 40px;
-    font-family: 'Inter',"Segoe UI",sans-serif;
+    font-family: 'Inter', sans-serif;
     color: var(--text-bright);
 }
 
-/* ===== CARDS ===== */
+/* TIÊU ĐỀ ĐỒNG BỘ */
+.page-title {
+    font-size: 1.9rem !important;
+    font-weight: 800 !important;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+    background: linear-gradient(90deg, #ffffff 0%, #0284c7 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    margin-bottom: 25px;
+}
 
-.bg-white{
+/* THIẾT KẾ CARD KÍNH MỜ */
+.table-card {
     background: var(--panel-bg) !important;
     backdrop-filter: blur(12px);
     border: 1px solid var(--border-color) !important;
-    border-radius: 16px !important;
-    box-shadow: 0 10px 40px rgba(0,0,0,0.4) !important;
-    transition: all .3s;
+    border-radius: 16px;
+    padding: 20px;
+    box-shadow: 0 10px 40px rgba(0,0,0,0.4);
 }
 
-.bg-white:hover{
-    border-color: var(--accent-blue) !important;
-}
-/* ===== PAGE TITLE ===== */
-
-.page-title{
-    font-size:26px;
-    font-weight:700;
-    color:#0f172a;
-    margin-bottom:20px;
+/* BẢNG TÁCH DÒNG HIỆN ĐẠI */
+table {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0 10px;
 }
 
-/* ===== CARD CONTAINER ===== */
-
-.table-card{
-    background:white;
-    border-radius:14px;
-    box-shadow:0 8px 25px rgba(0,0,0,0.06);
-    overflow:hidden;
+thead th {
+    text-align: left;
+    font-weight: 700;
+    color: var(--accent-blue);
+    font-size: 0.7rem;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    padding: 10px 16px;
+    border: none;
 }
 
-/* ===== TABLE HEADER ===== */
-
-.table-card thead{
-    background:#f1f5f9;
+tbody td {
+    padding: 16px;
+    font-size: 0.9rem;
+    background: rgba(255, 255, 255, 0.03);
+    border: none !important;
 }
 
-.table-card th{
-    text-align:left;
-    font-weight:600;
-    color:#334155;
-    font-size:14px;
-    padding:14px 16px;
+tbody td:first-child { border-radius: 12px 0 0 12px; }
+tbody td:last-child { border-radius: 0 12px 12px 0; }
+
+tbody tr:hover td {
+    background: rgba(56, 189, 248, 0.1);
+    color: #fff;
 }
 
-/* ===== TABLE BODY ===== */
-
-.table-card td{
-    padding:14px 16px;
-    font-size:14px;
-    color:#1e293b;
+/* STYLE CHI TIẾT */
+.ip {
+    font-family: 'JetBrains Mono', monospace;
+    font-weight: 600;
+    color: var(--accent-blue);
 }
 
-/* ===== ROW STYLE ===== */
-
-.table-card tbody tr{
-    border-top:1px solid #e5e7eb;
-    transition:all .2s ease;
+.country {
+    color: var(--text-bright);
 }
 
-.table-card tbody tr:hover{
-    background:#f8fafc;
-    transform:scale(1.002);
+/* BADGES NEON */
+.badge {
+    padding: 5px 12px;
+    border-radius: 6px;
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
 }
 
-/* ===== IP STYLE ===== */
-
-.ip{
-    font-weight:600;
-    color:#2563eb;
+.badge-human {
+    background: rgba(16, 185, 129, 0.1);
+    color: var(--accent-green);
+    border: 1px solid rgba(16, 185, 129, 0.3);
 }
 
-/* ===== COUNTRY ===== */
-
-.country{
-    font-weight:500;
+.badge-bot {
+    background: rgba(244, 63, 94, 0.1);
+    color: var(--accent-red);
+    border: 1px solid rgba(244, 63, 94, 0.3);
 }
 
-/* ===== BADGE ===== */
-
-.badge{
-    padding:4px 10px;
-    border-radius:20px;
-    font-size:12px;
-    font-weight:600;
+.time {
+    color: var(--text-dim);
+    font-size: 0.8rem;
 }
-
-/* HUMAN */
-
-.badge-human{
-    background:#dcfce7;
-    color:#16a34a;
-}
-
-/* BOT */
-
-.badge-bot{
-    background:#fee2e2;
-    color:#dc2626;
-}
-
-/* ===== TIME ===== */
-
-.time{
-    color:#64748b;
-    font-size:13px;
-}
-
 </style>
-<h1 class="page-title">
- Traffic Logs
-</h1>
+
+<div class="mb-8">
+    <h1 class="page-title">Traffic Logs</h1>
+    <p class="text-dim text-sm" style="margin-top: -20px;">Detailed history of server requests and visitor identities</p>
+</div>
 
 <div class="table-card">
-
-<table class="w-full">
-
-<thead>
-<tr>
-<th>IP Address</th>
-<th>Country</th>
-<th>Visitor Type</th>
-<th>Time</th>
-</tr>
-</thead>
-
-<tbody>
-
-@foreach($visitors as $v)
-
-<tr>
-
-<td class="ip">
-{{ $v->ip }}
-</td>
-
-<td class="country">
-🌍 {{ $v->country }}
-</td>
-
-<td>
-
-@if($v->is_bot)
-
-<span class="badge badge-bot">
- Bot
-</span>
-
-@else
-
-<span class="badge badge-human">
- Human
-</span>
-
-@endif
-
-</td>
-
-<td class="time">
-{{ $v->created_at }}
-</td>
-
-</tr>
-
-@endforeach
-
-</tbody>
-
-</table>
-
+    <table class="w-full">
+        <thead>
+            <tr>
+                <th>IP Address</th>
+                <th>Country</th>
+                <th>Visitor Type</th>
+                <th style="text-align: right;">Time</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach($visitors as $v)
+            <tr>
+                <td class="ip">{{ $v->ip }}</td>
+                <td class="country">🌍 {{ $v->country }}</td>
+                <td>
+                    @if($v->is_bot)
+                        <span class="badge badge-bot"> Bot</span>
+                    @else
+                        <span class="badge badge-human"> Human</span>
+                    @endif
+                </td>
+                <td class="time" style="text-align: left;">
+                    {{ $v->created_at->diffForHumans() }}
+                </td>
+            </tr>
+            @endforeach
+        </tbody>
+    </table>
 </div>
 
 @endsection

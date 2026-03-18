@@ -149,6 +149,41 @@ table th,
 table td{
 text-align:left !important;
 }
+/* ===== SYSTEM MONITORING ADD-ON ===== */
+.sys-card {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    padding: 1.25rem !important;
+}
+
+.sys-icon {
+    width: 45px;
+    height: 45px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 800;
+    font-size: 12px;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid var(--border-color);
+}
+
+.progress-container {
+    width: 100%;
+    height: 6px;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 10px;
+    margin-top: 8px;
+    overflow: hidden;
+}
+
+.progress-bar {
+    height: 100%;
+    border-radius: 10px;
+    transition: width 0.5s ease;
+}
 </style>
 
 
