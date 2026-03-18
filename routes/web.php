@@ -48,6 +48,10 @@ Route::get('/api/traffic-stats', function () {
 
 });
 
+Route::get('/databases', function () {
+    return view('databases.index');
+});
+
 Route::get('/firewall',[FirewallController::class,'index']);
 Route::post('/firewall/block',[FirewallController::class,'block']);
 Route::delete('/firewall/{id}',[FirewallController::class,'unblock']);
@@ -67,3 +71,4 @@ Route::delete('/domains/{id}', [App\Http\Controllers\DomainController::class, 'd
 require __DIR__.'/auth.php';
 
 Route::post('/domains/{id}/toggle', [\App\Http\Controllers\DomainController::class, 'toggle']);
+
