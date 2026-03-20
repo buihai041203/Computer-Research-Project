@@ -11,7 +11,7 @@ use Illuminate\Support\Facades\Cache;
 use App\Models\BlockedIP;
 use App\Services\ThreatAnalyzer;
 use App\Models\Domain;
-use Illuminate\Support\Str;
+
 
 class LogTraffic
 {
@@ -26,12 +26,26 @@ class LogTraffic
 
         $ip = $request->ip();
 
+        if (
+        $request->is('dashboard*') ||
+        $request->is('api/*') ||
+        $request->is('domains*') ||
+        $request->is('login') ||
+        $request->is('register') ||
+        $request->is('profile*')
+        ) {
+        return $next($request);
+        }
+
         $domain = $request->getHost();
 
-        $domainModel = Domain::firstOrCreate(
-            ['domain' => $domain],
-            ['agent_key' => Str::uuid()]
-        );
+        $domainModel = Domain::where('domain', $domain)
+            ->where('is_active', true)
+            ->first();
+
+        if (!$domainModel) {
+            return $next($request); // host không nằm trong danh sách quản lý thì bỏ qua
+        }
 
         $agent = $request->userAgent();
 
