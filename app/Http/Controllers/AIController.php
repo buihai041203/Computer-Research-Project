@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Log;
 use App\Models\TrafficLog;
 use App\Models\BlockedIP;
 use App\Models\SecurityEvent;
@@ -14,7 +15,7 @@ class AIController extends Controller
     public function chat(Request $request)
     {
         $data = $request->validate([
-            'message' => 'required|string|max:255',
+            'message' => 'required|string|max:200',
         ]);
 
         $user = auth()->user();
@@ -58,10 +59,10 @@ class AIController extends Controller
             }
 
         } catch (\Exception $e) {
-            // ✅ FIX 2: debug rõ lỗi
+            Log::error('AI controller exception', ['message' => $e->getMessage(), 'trace' => $e->getTraceAsString()]);
             return response()->json([
-                'reply' => "❌ Server error: " . $e->getMessage()
-            ]);
+                'reply' => '❌ Server error processing AI request. Please try again.'
+            ], 500);
         }
     }
 
@@ -219,39 +220,47 @@ class AIController extends Controller
     // =========================
     private function handleAIResponse($message)
     {
+        $openaiKey = env('OPENAI_API_KEY');
+
+        if (empty($openaiKey)) {
+            Log::error('OpenAI API key missing in .env');
+            return response()->json(['reply' => '⚠️ AI is not configured.'], 500);
+        }
+
         try {
             $response = Http::withHeaders([
-                'Authorization' => 'Bearer ' . env('OPENAI_API_KEY'),
-                'Content-Type'  => 'application/json',
-            ])->post('https://api.openai.com/v1/chat/completions', [
+                'Authorization' => 'Bearer ' . $openaiKey,
+                'Content-Type' => 'application/json',
+            ])->timeout(20)->post('https://api.openai.com/v1/chat/completions', [
                 'model' => 'gpt-4o-mini',
                 'messages' => [
-                    [
-                        'role' => 'system',
-                        'content' => 'You are a cybersecurity assistant.'
-                    ],
-                    [
-                        'role' => 'user',
-                        'content' => $message
-                    ]
+                    ['role' => 'system', 'content' => 'You are a safe cybersecurity assistant; keep responses short and factual.'],
+                    ['role' => 'user', 'content' => $message],
                 ],
-                'max_tokens' => 150,
+                'max_tokens' => 180,
+                'temperature' => 0.7,
+                'n' => 1,
             ]);
 
-            if ($response->successful()) {
-                return response()->json([
-                    'reply' => $response['choices'][0]['message']['content']
-                ]);
+            if (!$response->successful()) {
+                Log::error('OpenAI API returned non-success', ['status' => $response->status(), 'body' => $response->body()]);
+                return response()->json(['reply' => '⚠️ AI not responding. Try again later.'], 500);
             }
 
-            return response()->json([
-                'reply' => "⚠️ AI not responding."
-            ]);
+            $result = $response->json();
+            $reply = data_get($result, 'choices.0.message.content');
+
+            if (empty($reply)) {
+                Log::error('OpenAI API returned empty reply', ['body' => $response->body()]);
+                return response()->json(['reply' => '⚠️ AI responded but no content.'], 500);
+            }
+
+            $safeReply = trim(strip_tags($reply));
+            return response()->json(['reply' => $safeReply]);
 
         } catch (\Exception $e) {
-            return response()->json([
-                'reply' => "❌ AI error: " . $e->getMessage()
-            ]);
+            Log::error('OpenAI API call failed', ['exception' => $e->getMessage()]);
+            return response()->json(['reply' => '❌ AI request failed. Please try again later.'], 500);
         }
     }
 }
