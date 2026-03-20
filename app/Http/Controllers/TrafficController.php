@@ -1,7 +1,7 @@
 <?php
 
 namespace App\Http\Controllers;
-
+use App\Models\TrafficLog;
 use Illuminate\Http\Request;
 use App\Models\Visitor;
 
@@ -17,13 +17,18 @@ class TrafficController extends Controller
 
     public function stats()
     {
-        $human = rand(10,50);
-        $bot = rand(1,20);
+    $human = TrafficLog::where('type', 'human')
+    ->where('created_at', '>=', now()->subMinute())
+    ->count();
 
-        return response()->json([
-            'human' => $human,
-            'bot' => $bot
-        ]);
+    $bot = TrafficLog::where('type', 'bot')
+    ->where('created_at', '>=', now()->subMinute())
+    ->count();
+
+    return response()->json([
+    'human' => $human,
+    'bot' => $bot
+    ]);
     }
 
 }

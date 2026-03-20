@@ -22,8 +22,8 @@ class DomainController extends Controller
     ]);
 
     // Ép kiểu luôn về 8.4 hoặc lấy từ request nếu sau này muốn mở lại
-    $phpVersion = $request->php_version ?? '8.4'; 
-    $rootPath = '/var/www/' . $request->domain;
+    $phpVersion = $request->php_version ?? '8.4';
+    $rootPath = '/var/www/sites/' . $request->domain;
 
     Domain::create([
         'domain' => $request->domain,
@@ -41,7 +41,7 @@ class DomainController extends Controller
     {
         $domain = Domain::findOrFail($id);
         $domain->delete();
-        
+
         return back()->with('success', 'Domain deleted successfully!');
     }
     public function toggle($id) {
