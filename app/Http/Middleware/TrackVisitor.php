@@ -13,6 +13,18 @@ class TrackVisitor
     {
 
         $ip = $request->ip();
+
+        if (
+        $request->is('dashboard*') ||
+        $request->is('api/*') ||
+        $request->is('domains*') ||
+        $request->is('login') ||
+        $request->is('register') ||
+        $request->is('profile*')
+        ) {
+        return $next($request);
+        }
+
         $agent = $request->userAgent();
 
         $location = Location::get($ip);
