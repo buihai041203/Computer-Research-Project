@@ -1,11 +1,11 @@
 @extends('layouts.panel')
 
 @section('content')
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+
 <style>
-
-/* ===== IMPORT FONT (đã có) ===== */
-
 /* ===== DESIGN TOKENS ===== */
 :root {
     --surface-0: #060c17;
@@ -14,6 +14,7 @@
     --border-faint: rgba(148,163,184,.07);
     --border-subtle: rgba(148,163,184,.13);
 
+    --cyan: #22d3ee;
     --red: #f87171;
 
     --text-primary: #e2e8f0;
@@ -22,155 +23,178 @@
 
     --font-ui: 'DM Sans', sans-serif;
     --font-mono: 'Space Mono', monospace;
+
+    --r-lg: 14px;
 }
 
-/* ===== BODY ===== */
+/* ===== BASE ===== */
 body {
-    font-family: var(--font-ui) !important;
+    font-family: var(--font-ui);
     background: var(--surface-0);
     color: var(--text-primary);
 }
 
+/* ===== WRAP ===== */
+.scc-wrap {
+    max-width: 1440px;
+    margin: 0 auto;
+    padding: 24px;
+}
+
 /* ===== TITLE ===== */
-h1 {
-    font-size: 1.4rem !important;
-    font-weight: 600 !important;
-    margin-bottom: 24px !important;
-    letter-spacing: -0.02em;
-}
-
-/* ===== CARD ===== */
-.bg-white {
-    background: var(--surface-1) !important;
-    border: 1px solid var(--border-faint) !important;
-    border-radius: 14px !important;
-    overflow: hidden;
-}
-
-.bg-white:hover {
-    border-color: var(--border-subtle) !important;
-    box-shadow: 0 8px 30px rgba(0,0,0,.4);
-}
-
-/* ===== TABLE ===== */
-table {
-    width: 100%;
-    border-collapse: collapse;
-}
-
-/* ===== HEADER (FIX LỆCH FONT + SPACING) ===== */
-thead th {
-    font-family: var(--font-mono) !important;
-    font-size: 9px !important;
-    font-weight: 700;
-    letter-spacing: .1em;
-    text-transform: uppercase;
-    color: var(--text-muted);
-    padding: 10px 16px !important;
-    text-align: left;
-    border-bottom: 1px solid var(--border-faint);
-}
-
-/* ===== ROW ===== */
-tbody tr {
-    border-bottom: 1px solid var(--border-faint) !important;
-    transition: background .2s ease;
-}
-
-tbody tr:hover {
-    background: rgba(34,211,238,.03);
-}
-
-/* ===== CELL (FIX PADDING TAILWIND) ===== */
-td {
-    padding: 11px 16px !important;
-    font-size: 13px;
-    color: var(--text-primary);
-}
-
-/* ===== MONO (IP + TIME) ===== */
-td:first-child,
-td:last-child {
-    font-family: var(--font-mono) !important;
-    font-size: 11px;
-}
-
-/* ===== TYPE ===== */
-td:nth-child(2) {
-    font-weight: 600;
-    color: var(--red) !important;
-}
-
-/* ===== DESCRIPTION ===== */
-td:nth-child(3) {
-    color: var(--text-secondary);
-}
-
-/* ===== FIX TAILWIND LỆCH ===== */
-.p-3 {
-    padding: 11px 16px !important;
-}
-
-.border-b {
-    border-bottom: 1px solid var(--border-faint) !important;
-}
 .page-title {
     font-size: 1.4rem;
     font-weight: 600;
+    margin-bottom: 20px;
     letter-spacing: -0.025em;
 }
-
 .page-title em {
     font-style: normal;
-    color: #22d3ee; /* cyan giống dashboard */
+    color: var(--cyan);
+}
+
+/* ===== CARD ===== */
+.card {
+    background: var(--surface-1);
+    border: 1px solid var(--border-faint);
+    border-radius: 14px;
+    overflow: hidden;
+    box-shadow: 0 10px 30px rgba(0,0,0,.35);
+}
+.dtable {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+}
+
+/* HEADER */
+.dtable thead th {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: .1em;
+    color: var(--text-secondary);
+    padding: 12px 16px;
+    background: rgba(255,255,255,0.02);
+    border-bottom: 1px solid var(--border-faint);
+}
+
+/* ROW */
+.dtable tbody tr {
+    border-bottom: 1px solid var(--border-faint);
+    transition: 0.2s;
+}
+
+/* ZEBRA */
+.dtable tbody tr:nth-child(even) {
+    background: rgba(255,255,255,0.01);
+}
+
+/* HOVER */
+.dtable tbody tr:hover {
+    background: rgba(34,211,238,.04);
+}
+
+/* CELL */
+.dtable td {
+    padding: 12px 16px;
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--text-primary);
+}
+/* VERTICAL LINES (QUAN TRỌNG) */
+.dtable th,
+.dtable td {
+    border-right: 1px solid var(--border-faint);
+}
+
+.dtable th:last-child,
+.dtable td:last-child {
+    border-right: none;
+}
+
+/* BO GÓC CHUẨN */
+.dtable thead th:first-child {
+    border-top-left-radius: 14px;
+}
+.dtable thead th:last-child {
+    border-top-right-radius: 14px;
+}
+.dtable th,
+.dtable td {
+    text-align: left !important;
+}
+.dtable td:last-child {
+    text-align: left !important;
+}
+
+/* MONO */
+.t-mono {
+    font-family: var(--font-mono);
+    
+    font-size: 12px;
+    font-weight: 500;
+}
+.badge {
+    font-weight: 700;
+    font-size: 10px;
+}
+
+/* TYPE BADGE */
+.badge-danger {
+    color: var(--red);
+    font-weight: 700;
+    font-family: var(--font-mono);
 }
 </style>
 
-<h1 class="page-title">
-    Security <em>Events</em>
-</h1>
+<div class="scc-wrap">
 
-<table class="w-full bg-white shadow">
+    <h1 class="page-title">
+        Security <em>Events</em>
+    </h1>
 
-<thead>
+    <div class="card">
+        <table class="dtable">
+            <thead>
+                <tr>
+                    <th>IP ADDRESS</th>
+                    <th>TYPE</th>
+                    <th>DESCRIPTION</th>
+                    <th>TIME</th>
+                </tr>
+            </thead>
 
-<tr class="border-b">
+            <tbody>
+                @forelse($events as $event)
+                <tr>
+                    <td class="t-mono">{{ $event->ip }}</td>
 
-<th class="p-3">IP</th>
-<th class="p-3">Type</th>
-<th class="p-3">Description</th>
-<th class="p-3">Time</th>
+                    <td>
+                        <span class="badge-danger">
+                            {{ strtoupper($event->type) }}
+                        </span>
+                    </td>
 
-</tr>
+                    <td style="color: var(--text-secondary)">
+                        {{ $event->description }}
+                    </td>
 
-</thead>
+                    <td class="t-mono" style="color: var(--text-secondary)">
+                        {{ $event->created_at }}
+                    </td>
+                </tr>
+                @empty
+                <tr>
+                    <td colspan="4" style="text-align:center; padding:30px; font-family:var(--font-mono); color:var(--text-muted)">
+                        // NO SECURITY EVENTS
+                    </td>
+                </tr>
+                @endforelse
+            </tbody>
+        </table>
+    </div>
 
-<tbody>
-
-@foreach($events as $event)
-
-<tr class="border-b">
-
-<td class="p-3">{{ $event->ip }}</td>
-
-<td class="p-3 text-red-500">
-{{ $event->type }}
-</td>
-
-<td class="p-3">
-{{ $event->description }}
-</td>
-
-<td class="p-3">
-{{ $event->created_at }}
-</td>
-
-</tr>
-
-@endforeach
-
-</tbody>
-
-</table>
+</div>
 
 @endsection
