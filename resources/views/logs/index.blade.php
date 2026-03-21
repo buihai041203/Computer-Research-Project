@@ -3,49 +3,114 @@
 @section('content')
 <style>
 
-/* ===== MODERN CYBERSECURITY UI VARIABLES ===== */
+/* ===== SYNC WITH PANEL (NO GLOBAL OVERRIDE) ===== */
 
+/* KHÔNG đụng body nữa */
 :root {
-    --bg-main: #020617;
-    --panel-bg: rgba(15, 23, 42, 0.8);
-    --accent-blue: #38bdf8;
-    --accent-green: #10b981;
-    --accent-red: #f43f5e;
-    --accent-yellow: #fbbf24;
-    --text-bright: #f8fafc;
-    --text-dim: #94a3b8;
-    --border-color: rgba(255, 255, 255, 0.1);
+    --cyan: #22d3ee;
+    --green: #4ade80;
+    --red: #f87171;
+
+    --text-primary: #e2e8f0;
+    --text-secondary: #64748b;
+    --text-muted: #334155;
+
+    --border-faint: rgba(148,163,184,.08);
+
+    --font-ui: 'DM Sans', sans-serif;
+    --font-mono: 'Space Mono', monospace;
 }
 
-body {
-    background-color: var(--bg-main) !important;
-    background-image:
-        radial-gradient(circle at 50% -20%, rgba(56,189,248,0.15), transparent),
-        linear-gradient(rgba(255,255,255,0.02) 1px, transparent 1px),
-        linear-gradient(90deg, rgba(255,255,255,0.02) 1px, transparent 1px);
-    background-size: 100% 100%, 40px 40px, 40px 40px;
-    font-family: 'Inter',"Segoe UI",sans-serif;
-    color: var(--text-bright);
+/* ===== FORCE FONT ĐỒNG BỘ ===== */
+h1, table, td, th {
+    font-family: var(--font-ui) !important;
 }
 
-/* ===== CARDS ===== */
-
-.bg-white{
-    background: var(--panel-bg) !important;
-    backdrop-filter: blur(12px);
-    border: 1px solid var(--border-color) !important;
-    border-radius: 16px !important;
-    box-shadow: 0 10px 40px rgba(0,0,0,0.4) !important;
-    transition: all .3s;
+/* ===== CARD ===== */
+.bg-white {
+    background: #0a1220 !important;
+    border: 1px solid var(--border-faint) !important;
+    border-radius: 14px !important;
 }
 
-.bg-white:hover{
-    border-color: var(--accent-blue) !important;
+/* ===== TABLE ===== */
+table {
+    width: 100%;
+    border-collapse: collapse;
 }
+
+/* header */
+thead th {
+    font-family: var(--font-mono) !important;
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: .08em;
+    color: var(--text-muted);
+    padding: 12px;
+    border-bottom: 1px solid var(--border-faint);
+}
+
+/* rows */
+tbody tr {
+    border-bottom: 1px solid var(--border-faint);
+    transition: .2s;
+}
+
+tbody tr:hover {
+    background: rgba(34,211,238,.04);
+}
+
+/* cells */
+td {
+    padding: 12px !important;
+    font-size: 13px;
+    color: var(--text-primary);
+}
+
+/* IP + Time mono */
+td:first-child,
+td:last-child {
+    font-family: var(--font-mono) !important;
+    font-size: 11px;
+}
+
+/* type color */
+.text-red-500 {
+    color: var(--red) !important;
+}
+
+.text-green-500 {
+    color: var(--green) !important;
+}
+
+/* description */
+td:nth-child(5) {
+    color: var(--text-secondary);
+}
+
+/* title */
+h1 {
+    font-size: 20px;
+    font-weight: 600;
+    margin-bottom: 20px;
+}
+.page-title {
+    font-size: 1.4rem;
+    font-weight: 600;
+    letter-spacing: -0.025em;
+    font-family: 'DM Sans', sans-serif;
+}
+
+.page-title em {
+    font-style: normal;
+    color: #22d3ee; /* xanh cyan */
+    font-weight: 600;
+}
+
 </style>
 
-<h1 class="text-2xl font-bold mb-6">
-System Logs
+<h1 class="page-title">
+    System <em>Logs</em>
 </h1>
 
 <div class="bg-white p-6 rounded shadow">

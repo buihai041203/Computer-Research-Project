@@ -1,51 +1,159 @@
 @extends('layouts.panel')
 
 @section('content')
+
+
 <style>
 
-/* ===== MODERN CYBERSECURITY UI VARIABLES ===== */
+/* ===== FONT CHUẨN ===== */
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600&family=Space+Mono:wght@400;700&display=swap');
 
+/* ===== DESIGN SYSTEM (SYNC TRAFFIC LOGS) ===== */
 :root {
-    --bg-main: #020617;
-    --panel-bg: rgba(15, 23, 42, 0.8);
-    --accent-blue: #38bdf8;
-    --accent-green: #10b981;
-    --accent-red: #f43f5e;
-    --accent-yellow: #fbbf24;
-    --text-bright: #f8fafc;
-    --text-dim: #94a3b8;
-    --border-color: rgba(255, 255, 255, 0.1);
+    --surface-0: #060c17;
+    --surface-1: #0a1220;
+    --surface-2: #0f1a2e;
+
+    --border-faint: rgba(148,163,184,.07);
+
+    --cyan: #22d3ee;
+    --green: #4ade80;
+    --red: #f87171;
+
+    --text-primary: #e2e8f0;
+    --text-secondary: #64748b;
+
+    --font-ui: 'DM Sans', sans-serif;
+    --font-mono: 'Space Mono', monospace;
 }
 
+/* ===== FORCE GLOBAL ===== */
 body {
-    background-color: var(--bg-main) !important;
-    background-image:
-        radial-gradient(circle at 50% -20%, rgba(56,189,248,0.15), transparent),
-        linear-gradient(rgba(255,255,255,0.02) 1px, transparent 1px),
-        linear-gradient(90deg, rgba(255,255,255,0.02) 1px, transparent 1px);
-    background-size: 100% 100%, 40px 40px, 40px 40px;
-    font-family: 'Inter',"Segoe UI",sans-serif;
-    color: var(--text-bright);
+    font-family: var(--font-ui) !important;
+    background: var(--surface-0) !important;
+    color: var(--text-primary) !important;
 }
 
-/* ===== CARDS ===== */
-
-.bg-white{
-    background: var(--panel-bg) !important;
-    backdrop-filter: blur(12px);
-    border: 1px solid var(--border-color) !important;
-    border-radius: 16px !important;
-    box-shadow: 0 10px 40px rgba(0,0,0,0.4) !important;
-    transition: all .3s;
+/* ===== TITLE (CHỮ XANH NỬA) ===== */
+h1 {
+    font-size: 1.4rem !important;
+    font-weight: 600 !important;
+    letter-spacing: -.025em;
+    margin-bottom: 24px !important;
 }
 
-.bg-white:hover{
-    border-color: var(--accent-blue) !important;
+/* 👉 thêm chữ xanh mà KHÔNG sửa HTML */
+h1::after {
+    content: " Panel";
+    color: var(--cyan);
+    margin-left: 6px;
 }
+
+/* ===== CARD ===== */
+.bg-white {
+    background: var(--surface-1) !important;
+    border: 1px solid var(--border-faint) !important;
+    border-radius: 14px !important;
+    box-shadow: none !important;
+}
+
+/* ===== FORM ===== */
+input {
+    background: var(--surface-2) !important;
+    border: 1px solid var(--border-faint) !important;
+    color: var(--text-primary) !important;
+    font-family: var(--font-mono);
+    font-size: 12px;
+    padding: 10px 12px !important;
+}
+
+input::placeholder {
+    color: var(--text-secondary);
+}
+
+/* ===== BUTTON ===== */
+button {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    font-weight: 700;
+    border-radius: 6px !important;
+    transition: all .2s ease;
+}
+
+/* Block button */
+.bg-red-500 {
+    background: rgba(248,113,113,.15) !important;
+    color: var(--red) !important;
+    border: 1px solid rgba(248,113,113,.3);
+}
+
+.bg-red-500:hover {
+    background: rgba(248,113,113,.25) !important;
+}
+
+/* Unblock button */
+.text-green-500 {
+    color: var(--green) !important;
+    font-weight: 600;
+}
+
+/* ===== TABLE ===== */
+table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+/* HEADER */
+thead th {
+    font-family: var(--font-mono);
+    font-size: 9px;
+    text-transform: uppercase;
+    color: var(--text-secondary);
+    padding: 12px 16px !important;
+    border-bottom: 1px solid var(--border-faint);
+    text-align: left;
+}
+
+/* ROW */
+tbody tr {
+    border-bottom: 1px solid var(--border-faint);
+}
+
+tbody tr:hover {
+    background: rgba(34,211,238,.02);
+}
+
+/* CELL */
+td {
+    padding: 14px 16px !important;
+    font-size: 13px;
+}
+
+/* IP mono + màu cyan */
+td:first-child {
+    font-family: var(--font-mono);
+    color: var(--cyan);
+}
+
+/* Reason */
+td:nth-child(2) {
+    color: var(--text-secondary);
+}
+#ai-chat-toggle,
+#ai-chat-send {
+    border-radius: 50% !important;
+}
+.logout-btn {
+    font-family: var(--font-ui) !important;
+    font-size: 16px !important;
+    font-weight: 600 !important;
+}
+
+
 </style>
 
 <h1 class="text-2xl font-bold mb-6">
-    Firewall Panel
+    Firewall
 </h1>
 
 <div class="bg-white p-6 rounded shadow mb-6">
