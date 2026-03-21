@@ -1,51 +1,133 @@
 @extends('layouts.panel')
 
 @section('content')
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
 <style>
 
-/* ===== MODERN CYBERSECURITY UI VARIABLES ===== */
+/* ===== IMPORT FONT (đã có) ===== */
 
+/* ===== DESIGN TOKENS ===== */
 :root {
-    --bg-main: #020617;
-    --panel-bg: rgba(15, 23, 42, 0.8);
-    --accent-blue: #38bdf8;
-    --accent-green: #10b981;
-    --accent-red: #f43f5e;
-    --accent-yellow: #fbbf24;
-    --text-bright: #f8fafc;
-    --text-dim: #94a3b8;
-    --border-color: rgba(255, 255, 255, 0.1);
+    --surface-0: #060c17;
+    --surface-1: #0a1220;
+
+    --border-faint: rgba(148,163,184,.07);
+    --border-subtle: rgba(148,163,184,.13);
+
+    --red: #f87171;
+
+    --text-primary: #e2e8f0;
+    --text-secondary: #64748b;
+    --text-muted: #2d3f5c;
+
+    --font-ui: 'DM Sans', sans-serif;
+    --font-mono: 'Space Mono', monospace;
 }
 
+/* ===== BODY ===== */
 body {
-    background-color: var(--bg-main) !important;
-    background-image:
-        radial-gradient(circle at 50% -20%, rgba(56,189,248,0.15), transparent),
-        linear-gradient(rgba(255,255,255,0.02) 1px, transparent 1px),
-        linear-gradient(90deg, rgba(255,255,255,0.02) 1px, transparent 1px);
-    background-size: 100% 100%, 40px 40px, 40px 40px;
-    font-family: 'Inter',"Segoe UI",sans-serif;
-    color: var(--text-bright);
+    font-family: var(--font-ui) !important;
+    background: var(--surface-0);
+    color: var(--text-primary);
 }
 
-/* ===== CARDS ===== */
-
-.bg-white{
-    background: var(--panel-bg) !important;
-    backdrop-filter: blur(12px);
-    border: 1px solid var(--border-color) !important;
-    border-radius: 16px !important;
-    box-shadow: 0 10px 40px rgba(0,0,0,0.4) !important;
-    transition: all .3s;
+/* ===== TITLE ===== */
+h1 {
+    font-size: 1.4rem !important;
+    font-weight: 600 !important;
+    margin-bottom: 24px !important;
+    letter-spacing: -0.02em;
 }
 
-.bg-white:hover{
-    border-color: var(--accent-blue) !important;
+/* ===== CARD ===== */
+.bg-white {
+    background: var(--surface-1) !important;
+    border: 1px solid var(--border-faint) !important;
+    border-radius: 14px !important;
+    overflow: hidden;
+}
+
+.bg-white:hover {
+    border-color: var(--border-subtle) !important;
+    box-shadow: 0 8px 30px rgba(0,0,0,.4);
+}
+
+/* ===== TABLE ===== */
+table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+/* ===== HEADER (FIX LỆCH FONT + SPACING) ===== */
+thead th {
+    font-family: var(--font-mono) !important;
+    font-size: 9px !important;
+    font-weight: 700;
+    letter-spacing: .1em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    padding: 10px 16px !important;
+    text-align: left;
+    border-bottom: 1px solid var(--border-faint);
+}
+
+/* ===== ROW ===== */
+tbody tr {
+    border-bottom: 1px solid var(--border-faint) !important;
+    transition: background .2s ease;
+}
+
+tbody tr:hover {
+    background: rgba(34,211,238,.03);
+}
+
+/* ===== CELL (FIX PADDING TAILWIND) ===== */
+td {
+    padding: 11px 16px !important;
+    font-size: 13px;
+    color: var(--text-primary);
+}
+
+/* ===== MONO (IP + TIME) ===== */
+td:first-child,
+td:last-child {
+    font-family: var(--font-mono) !important;
+    font-size: 11px;
+}
+
+/* ===== TYPE ===== */
+td:nth-child(2) {
+    font-weight: 600;
+    color: var(--red) !important;
+}
+
+/* ===== DESCRIPTION ===== */
+td:nth-child(3) {
+    color: var(--text-secondary);
+}
+
+/* ===== FIX TAILWIND LỆCH ===== */
+.p-3 {
+    padding: 11px 16px !important;
+}
+
+.border-b {
+    border-bottom: 1px solid var(--border-faint) !important;
+}
+.page-title {
+    font-size: 1.4rem;
+    font-weight: 600;
+    letter-spacing: -0.025em;
+}
+
+.page-title em {
+    font-style: normal;
+    color: #22d3ee; /* cyan giống dashboard */
 }
 </style>
 
-<h1 class="text-2xl font-bold mb-6">
-Security Events
+<h1 class="page-title">
+    Security <em>Events</em>
 </h1>
 
 <table class="w-full bg-white shadow">

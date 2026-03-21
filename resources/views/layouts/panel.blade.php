@@ -7,17 +7,16 @@
 <title>Smart Security Panel</title>
 
 @vite(['resources/css/app.css','resources/js/app.js'])
-
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
 <style>
 
 /* ===== GLOBAL ===== */
 
 body{
-    background:#f1f5f9;
-    font-family:"Segoe UI", sans-serif;
-    color:#1e293b;
+    background:#060c17;
+    font-family:'DM Sans', sans-serif;
+    color:#e2e8f0;
 }
-
 /* ===== SIDEBAR ===== */
 
 .w-64{
@@ -33,6 +32,9 @@ body{
     color:white;
     box-shadow:4px 0 25px rgba(0,0,0,0.15);
     padding-top:10px;
+    
+    display:flex;
+    flex-direction:column;
 }
 
 /* LOGO */
@@ -111,28 +113,27 @@ body{
     margin-left:260px;
 }
 
-/* ===== TOPBAR ===== */
+/* ===== LOGOUT SIDEBAR ===== */
+.logout-box{
+    margin-top:auto;
+    padding:20px;
+    display:flex;
+    justify-content:center;
+}
 
-.bg-white.shadow.p-4{
-
-    position:fixed;
-    top:0;
-    left:260px;
-    right:0;
-
-    z-index:1000;
-
-    background:white;
-
-    border-bottom:1px solid #e5e7eb;
-
-    box-shadow:0 2px 15px rgba(0,0,0,0.05);
+.logout-btn{
+    color:#f87171;
+    font-weight:600;
+    background:none;
+    border:none;
+    cursor:pointer;
+    text-align:center;
 }
 
 /* ===== PAGE CONTENT ===== */
 
 .p-6{
-    margin-top:80px;
+    margin-top:0px;
 }
 
 /* ===== BUTTON ===== */
@@ -207,33 +208,20 @@ SmartPanel
 </li>
 
 </ul>
-
+<div class="logout-box">
+    <form method="POST" action="{{ route('logout') }}">
+        @csrf
+        <button class="logout-btn">
+            Logout
+        </button>
+    </form>
+</div>
 </div>
 
 <!-- Content -->
 
 <div class="flex-1 flex flex-col">
 
-<!-- Topbar -->
-
-<div class="bg-white shadow p-4 flex justify-between">
-
-<div>
-Admin Panel
-</div>
-
-<div>
-
-<form method="POST" action="{{ route('logout') }}">
-@csrf
-<button class="text-red-500">
-Logout
-</button>
-</form>
-
-</div>
-
-</div>
 
 <!-- Page Content -->
 
