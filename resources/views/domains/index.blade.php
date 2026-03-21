@@ -1,176 +1,221 @@
 @extends('layouts.panel')
 
 @section('content')
+
+{{-- ══════════════════════════════════════════════════════════════════
+     DOMAIN MANAGEMENT · v2.0
+     Sync: Security Command Center Design System
+     Fonts: Space Mono + DM Sans
+══════════════════════════════════════════════════════════════════ --}}
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+
 <style>
-/* ===== MODERN CYBERSECURITY UI VARIABLES ===== */
+/* ─────────────────────────────────────────────────────
+   §1  SHARED DESIGN TOKENS (Đồng bộ với Dashboard)
+───────────────────────────────────────────────────── */
 :root {
-    --bg-main: #020617;
-    --panel-bg: rgba(15, 23, 42, 0.8);
-    --accent-blue: #38bdf8;
-    --accent-green: #10b981;
-    --accent-red: #f43f5e;
-    --accent-yellow: #fbbf24;
-    --text-bright: #f8fafc;
-    --text-dim: #94a3b8;
-    --border-color: rgba(255, 255, 255, 0.1);
+    --surface-0: #060c17;
+    --surface-1: #0a1220;
+    --surface-2: #0f1a2e;
+    --surface-3: #162236;
+    --border-faint: rgba(148,163,184,.07);
+    --cyan: #22d3ee;
+    --green: #4ade80;
+    --red: #f87171;
+    --amber: #fbbf24;
+    --text-primary: #e2e8f0;
+    --text-secondary: #64748b;
+    --font-ui: 'DM Sans', sans-serif;
+    --font-mono: 'Space Mono', monospace;
+    --r-lg: 14px;
+    --r-sm: 6px;
+    --ease: cubic-bezier(.4,0,.2,1);
+    --dur: 180ms;
 }
 
 body {
-    background-color: var(--bg-main) !important;
-    background-image:
-        radial-gradient(circle at 50% -20%, rgba(56,189,248,0.15), transparent),
-        linear-gradient(rgba(255,255,255,0.02) 1px, transparent 1px),
-        linear-gradient(90deg, rgba(255,255,255,0.02) 1px, transparent 1px);
-    background-size: 100% 100%, 40px 40px, 40px 40px;
-    font-family: 'Inter',"Segoe UI",sans-serif;
-    color: var(--text-bright);
+    background: var(--surface-0) !important;
+    background-image: 
+        radial-gradient(ellipse 70% 40% at 50% 0%, rgba(34,211,238,.05) 0%, transparent 55%) !important;
+    color: var(--text-primary);
+    font-family: var(--font-ui);
 }
 
-/* ===== CARDS ===== */
-.bg-white{
-    background: var(--panel-bg) !important;
-    backdrop-filter: blur(12px);
-    border: 1px solid var(--border-color) !important;
-    border-radius: 16px !important;
-    box-shadow: 0 10px 40px rgba(0,0,0,0.4) !important;
-    transition: all .3s;
+/* ─────────────────────────────────────────────────────
+   §2  REUSABLE COMPONENTS
+───────────────────────────────────────────────────── */
+.card {
+    background: var(--surface-1);
+    border: 1px solid var(--border-faint);
+    border-radius: var(--r-lg);
+    transition: all var(--dur) var(--ease);
+    overflow: hidden;
+    margin-bottom: 24px;
+}
+.card:hover { border-color: rgba(148,163,184,.13); box-shadow: 0 8px 32px rgba(0,0,0,.35); }
+
+.card__header { padding: 16px 20px; border-bottom: 1px solid var(--border-faint); }
+.card__body { padding: 20px; }
+
+/* ─────────────────────────────────────────────────────
+   §3  TYPOGRAPHY & UI
+───────────────────────────────────────────────────── */
+.t-label { font-size: 10px; font-weight: 600; letter-spacing: .1em; text-transform: uppercase; color: var(--text-secondary); }
+.t-section { font-size: 13px; font-weight: 600; color: var(--text-primary); }
+.t-mono { font-family: var(--font-mono); font-size: 12px; }
+
+.page-header { margin-bottom: 28px; padding-bottom: 20px; border-bottom: 1px solid var(--border-faint); }
+.page-header__title { font-size: 1.4rem; font-weight: 600; letter-spacing: -.025em; }
+.page-header__title em { font-style: normal; color: var(--cyan); }
+
+/* ─────────────────────────────────────────────────────
+   §4  FORMS & INPUTS
+───────────────────────────────────────────────────── */
+.form-group { display: flex; gap: 12px; }
+
+.input-cyber {
+    flex: 1;
+    background: var(--surface-2);
+    border: 1px solid var(--border-faint);
+    color: var(--text-primary);
+    padding: 12px 16px;
+    border-radius: var(--r-sm);
+    font-family: var(--font-mono);
+    font-size: 13px;
+    transition: all var(--dur) var(--ease);
+}
+.input-cyber:focus {
+    outline: none;
+    border-color: var(--cyan);
+    background: var(--surface-3);
+    box-shadow: 0 0 0 1px var(--cyan);
 }
 
-.bg-white:hover{ border-color: var(--accent-blue) !important; }
-
-/* ===== REGISTER DOMAIN FORM ===== */
-form{ display:flex; align-items:center; gap:18px; }
-
-.domain-input{
-    flex:1;
-    background: rgba(255,255,255,0.05);
-    border:1px solid rgba(56,189,248,0.25);
-    color:white;
-    padding:16px 18px;
-    border-radius:12px;
-    font-size:14px;
-    transition:.25s;
+.btn-cyber {
+    background: var(--cyan);
+    color: #060c17;
+    border: none;
+    padding: 0 24px;
+    border-radius: var(--r-sm);
+    font-weight: 700;
+    font-size: 12px;
+    cursor: pointer;
+    transition: all var(--dur) var(--ease);
+    text-transform: uppercase;
 }
+.btn-cyber:hover { opacity: 0.9; transform: translateY(-1px); box-shadow: 0 0 15px rgba(34,211,238,0.3); }
 
-.domain-input:focus{
-    border-color: var(--accent-blue);
-    background: rgba(255,255,255,0.08);
-    box-shadow:0 0 10px rgba(56,189,248,0.25);
-    outline:none;
+/* ─────────────────────────────────────────────────────
+   §5  SYNCED DATA TABLE
+───────────────────────────────────────────────────── */
+.dtable { width: 100%; border-collapse: collapse; }
+.dtable thead th {
+    font-family: var(--font-mono); font-size: 9px; font-weight: 700;
+    text-transform: uppercase; color: var(--text-secondary);
+    padding: 0 16px 10px; text-align: left;
+    border-bottom: 1px solid var(--border-faint);
 }
+.dtable tbody tr { border-bottom: 1px solid var(--border-faint); transition: background var(--dur) var(--ease); }
+.dtable tbody tr:hover { background: rgba(34,211,238,.02); }
+.dtable tbody td { padding: 14px 16px; vertical-align: middle; }
 
-.btn-add{
-    height:50px;
-    padding:0 26px;
-    background:linear-gradient(135deg,var(--accent-blue),#2563eb);
-    border-radius:12px;
-    font-weight:700;
-    font-size:14px;
-    display:flex; align-items:center; gap:8px;
-    transition:.25s;
+/* Status Badges */
+.badge {
+    padding: 3px 10px; border-radius: 4px; font-family: var(--font-mono); font-size: 10px; font-weight: 700;
 }
+.badge--active { background: rgba(74,222,128,.1); color: var(--green); border: 1px solid rgba(74,222,128,.2); }
+.badge--pending { background: rgba(251,191,36,.1); color: var(--amber); border: 1px solid rgba(251,191,36,.2); }
 
-.btn-add:hover{
-    transform:translateY(-1px);
-    box-shadow:0 0 18px rgba(56,189,248,.35);
+.action-btn {
+    background: transparent; border: none; font-family: var(--font-mono);
+    font-size: 10px; font-weight: 700; cursor: pointer; text-transform: uppercase;
 }
-
-/* ===== TABLE LAYOUT ===== */
-table{ width:100%; border-collapse:separate; border-spacing:0 14px; }
-thead th{ font-size:11px; letter-spacing:.15em; text-transform:uppercase; color:var(--text-dim); padding:0 14px 6px 14px; }
-tbody td{ background:rgba(255,255,255,0.04); padding:18px 14px; font-size:14px; border:none !important; }
-tbody td:first-child{ border-radius:14px 0 0 14px; }
-tbody td:last-child{ border-radius:0 14px 14px 0; }
-tbody tr:hover td{ background:rgba(56,189,248,0.12); }
-
-/* ===== STATUS BADGE ===== */
-.badge-status{ padding:6px 14px; border-radius:8px; font-size:11px; font-weight:700; background:rgba(16,185,129,0.15); color:var(--accent-green); border:1px solid rgba(16,185,129,0.7); }
-.badge-pending { padding:6px 14px; border-radius:8px; font-size:11px; font-weight:700; background:rgba(251,191,36,0.15); color:var(--accent-yellow); border:1px solid rgba(251,191,36,0.7); }
-
-/* ===== PAGE TITLE ===== */
-.page-title {
-    font-size:1.8rem!important; font-weight:800!important;
-    background: linear-gradient(to right,#fff,var(--accent-blue));
-    -webkit-background-clip:text; -webkit-text-fill-color:transparent;
-}
+.btn-delete { color: var(--text-secondary); transition: color .2s; }
+.btn-delete:hover { color: var(--red); }
 </style>
 
-<div class="mb-8">
-    <h1 class="page-title">DOMAIN MANAGEMENT</h1>
-    <p class="text-dim text-sm mt-1">Add and monitor your protected web domains</p>
-</div>
+<div class="scc-wrap" style="max-width: 1200px; margin: 0 auto; padding: 24px;">
 
-@if(session('success'))
-    <div class="bg-green-900/50 border border-green-500 text-green-200 px-4 py-3 rounded-xl mb-6">
-        {{ session('success') }}
-    </div>
-@endif
+    {{-- PAGE HEADER --}}
+    <header class="page-header">
+        <h1 class="page-header__title">Domain <em>Management</em></h1>
+        <p class="t-label" style="margin-top:4px; color:var(--text-secondary)">Add and monitor your protected web domains</p>
+    </header>
 
-<div class="bg-white p-8 mb-8">
-    <h2 class="text-accent-blue font-bold text-xs uppercase tracking-widest mb-6">Register New Domain</h2>
-
-    <form method="POST" action="/domains" class="flex gap-4">
-        @csrf
-        <div class="flex-1">
-            <input name="domain" class="domain-input w-full p-3 rounded-xl" placeholder="e.g. secure-site.com" required>
+    @if(session('success'))
+        <div class="card" style="background: rgba(74,222,128,.05); border-color: rgba(74,222,128,.2); color: var(--green); padding: 12px 20px; font-size: 13px;">
+            <span class="t-mono">✓</span> {{ session('success') }}
         </div>
-        
-        {{-- PHP 8.4 Auto --}}
-        <input type="hidden" name="php_version" value="8.4">
+    @endif
 
-        <button type="submit" class="btn-add text-white rounded-xl font-bold flex items-center gap-2">
-            <span>+</span> Add Domain
-        </button>
-    </form>
+    {{-- REGISTER FORM --}}
+    <div class="card">
+        <div class="card__header">
+            <span class="t-label">Register New Domain</span>
+        </div>
+        <div class="card__body">
+            <form method="POST" action="/domains" class="form-group">
+                @csrf
+                <input name="domain" class="input-cyber" placeholder="e.g. secure-site.com" required>
+                <input type="hidden" name="php_version" value="8.4">
+                <button type="submit" class="btn-cyber">Add Domain</button>
+            </form>
+        </div>
+    </div>
+
+    {{-- ACTIVE SUBSCRIPTIONS --}}
+    <div class="card">
+        <div class="card__header">
+            <span class="t-label">Active Subscriptions</span>
+        </div>
+        <div class="card__body" style="padding:0">
+            <table class="dtable">
+                <thead>
+                    <tr>
+                        <th>Domain Name</th>
+                        <th>Root Path</th>
+                        <th>PHP</th>
+                        <th>Status</th>
+                        <th style="text-align:right">Management</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach($domains as $domain)
+                    <tr>
+                        <td class="t-mono" style="color:var(--cyan)">{{ $domain->domain }}</td>
+                        <td class="t-mono" style="font-size:11px; color:var(--text-secondary)">{{ $domain->root_path ?? '/var/www/html' }}</td>
+                        <td class="t-mono">{{ $domain->php_version ?? '8.4' }}</td>
+                        <td>
+                            @if($domain->status == 'pending_setup')
+                                <span class="badge badge--pending">Pending</span>
+                            @else
+                                <span class="badge badge--active">Active</span>
+                            @endif
+                        </td>
+                        <td style="text-align:right">
+                            <div style="display:flex; justify-content:flex-end; gap:20px; align-items:center;">
+                                {{-- Toggle --}}
+                                <form action="/domains/{{ $domain->id }}/toggle" method="POST">
+                                    @csrf
+                                    <button type="submit" class="action-btn" style="color: {{ ($domain->is_active ?? true) ? 'var(--green)' : 'var(--red)' }}">
+                                        {{ ($domain->is_active ?? true) ? '● ON' : '○ OFF' }}
+                                    </button>
+                                </form>
+                                {{-- Delete --}}
+                                <form action="/domains/{{ $domain->id }}" method="POST" onsubmit="return confirm('Xác nhận xóa domain này?');">
+                                    @csrf @method('DELETE')
+                                    <button type="submit" class="action-btn btn-delete">Delete</button>
+                                </form>
+                            </div>
+                        </td>
+                    </tr>
+                    @endforeach
+                </tbody>
+            </table>
+        </div>
+    </div>
 </div>
 
-<div class="bg-white p-6">
-    <h2 class="text-accent-blue font-bold text-xs uppercase tracking-widest mb-6">Active Subscriptions</h2>
-    <table class="w-full">
-        <thead>
-            <tr>
-                <th class="text-left">Domain Name</th>
-                <th class="text-left">Root Path</th>
-                <th class="text-left">PHP</th>
-                <th class="text-left">Status</th>
-                <th class="text-right">Actions</th>
-            </tr>
-        </thead>
-        <tbody>
-            @foreach($domains as $domain)
-            <tr>
-                <td class="font-medium">
-                    <span class="text-blue-400">🌐</span> {{ $domain->domain }}
-                </td>
-                <td class="text-dim font-mono text-xs">{{ $domain->root_path ?? 'N/A' }}</td>
-                <td class="text-dim text-sm">{{ $domain->php_version ?? '8.4' }}</td>
-                <td>
-                    @if($domain->status == 'pending_setup')
-                        <span class="badge-pending">Pending</span>
-                    @else
-                        <span class="badge-status">{{ $domain->status ?? 'Active' }}</span>
-                    @endif
-                </td>
-                <td class="text-right">
-                    <div class="flex items-center justify-end gap-6">
-                        {{-- Nút Bật/Tắt Web --}}
-                        <form action="/domains/{{ $domain->id }}/toggle" method="POST" class="m-0 p-0">
-                            @csrf
-                            <button type="submit" class="font-bold text-[10px] {{ ($domain->is_active ?? true) ? 'text-accent-green' : 'text-accent-red' }}">
-                                {{ ($domain->is_active ?? true) ? '● ON' : '○ OFF' }}
-                            </button>
-                        </form>
-                        
-                        {{-- Nút Xóa --}}
-                        <form action="/domains/{{ $domain->id }}" method="POST" class="m-0 p-0" onsubmit="return confirm('Xóa domain này sẽ xóa toàn bộ log. Bạn có chắc chắn?');">
-                            @csrf @method('DELETE')
-                            <button type="submit" class="text-dim hover:text-red-400 transition-colors text-xs font-semibold uppercase tracking-tighter">Delete</button>
-                        </form>
-                    </div>
-                </td>
-            </tr>
-            @endforeach
-        </tbody>
-    </table>
-</div>
 @endsection
