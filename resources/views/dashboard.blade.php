@@ -63,6 +63,7 @@
     --dur: 180ms;
 }
 
+
 /* ─────────────────────────────────────────────────────
    §2  RESET + BASE
 ───────────────────────────────────────────────────── */
@@ -284,32 +285,58 @@ body {
 .dtable {
     width: 100%;
     border-collapse: collapse;
+    border-spacing: 0;
 }
+
+/* HEADER kiểu Excel */
 .dtable thead th {
     font-family: var(--font-mono);
-    font-size: 9px;
-    font-weight: 700;
-    letter-spacing: .1em;
+    font-size: 10px;
     text-transform: uppercase;
-    color: var(--text-muted);
-    padding: 0 16px 10px;
+    letter-spacing: .08em;
+    color: var(--text-secondary);
+    padding: 12px 15px;
+    background: rgba(255,255,255,0.02);
+    border-bottom: 2px solid var(--border-faint);
+    border-right: 1px solid var(--border-faint);
     text-align: left;
-    border-bottom: 1px solid var(--border-faint);
 }
+
+/* ROW */
 .dtable tbody tr {
     border-bottom: 1px solid var(--border-faint);
-    transition: background var(--dur) var(--ease);
+    transition: .15s;
 }
-.dtable tbody tr:last-child { border-bottom: none; }
-.dtable tbody tr:hover { background: rgba(34,211,238,.025); }
-.dtable tbody td {
-    padding: 11px 16px;
+
+/* ZEBRA */
+.dtable tbody tr:nth-child(even) {
+    background: rgba(255,255,255,0.01);
+}
+
+/* HOVER */
+.dtable tbody tr:hover {
+    background: rgba(34,211,238,.04);
+}
+
+/* CELL */
+.dtable td {
+    padding: 12px 15px;
     font-size: 13px;
-    vertical-align: middle;
+    color: var(--text-primary);
+    border-right: 1px solid var(--border-faint);
 }
+
+/* BỎ border cột cuối */
+.dtable td:last-child,
+.dtable th:last-child {
+    border-right: none;
+}
+
+/* MONO COLUMNS (IP / time giống log) */
 .dtable .td-mono {
     font-family: var(--font-mono);
     font-size: 11px;
+    color: var(--cyan);
 }
 
 /* Empty state */
@@ -515,6 +542,7 @@ body {
         grid-template-columns: 1fr;
     }
 }
+
 </style>
 
 {{-- ═══════════════════════════════════════

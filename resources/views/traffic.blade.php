@@ -153,39 +153,61 @@ html, body {
 /* ─────────────────────────────────────────────────────
    §5  TABLE SYNC (dtable style)
 ───────────────────────────────────────────────────── */
+/* TABLE STYLE giống System Logs */
+.dtable {
+    width: 100%;
+    border-collapse: separate; 
+    border-spacing: 0;
+}
+
+/* Header */
+.dtable thead th {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: .08em;
+    color: var(--text-secondary);
+    padding: 12px 15px;
+    background: rgba(255,255,255,0.02);
+    border-bottom: 2px solid var(--border-faint);
+    border-right: 1px solid var(--border-faint);
+    text-align: left;
+}
+
+/* Row */
+.dtable tbody tr {
+    border-bottom: 1px solid var(--border-faint);
+    transition: .15s;
+}
+
+/* Zebra rows */
+.dtable tbody tr:nth-child(even) {
+    background: rgba(255,255,255,0.01);
+}
+
+/* Hover */
+.dtable tbody tr:hover {
+    background: rgba(34,211,238,.04);
+}
+
+/* Cell */
+.dtable td {
+    padding: 12px 15px;
+    font-size: 13px;
+    color: var(--text-primary);
+    border-right: 1px solid var(--border-faint);
+}
+
+/* Remove last border */
+.dtable td:last-child,
+.dtable th:last-child {
+    border-right: none;
+}
 .card {
     background: var(--surface-1);
     border: 1px solid var(--border-faint);
     border-radius: var(--r-lg);
     overflow: hidden;
-}
-
-.dtable {
-    width: 100%;
-    border-collapse: collapse;
-}
-
-.dtable thead th {
-    font-family: var(--font-mono);
-    font-size: 9px;
-    font-weight: 700;
-    text-transform: uppercase;
-    color: var(--text-secondary);
-    padding: 12px 16px;
-    text-align: left;
-    border-bottom: 1px solid var(--border-faint);
-}
-
-.dtable tbody tr {
-    border-bottom: 1px solid var(--border-faint);
-    transition: background var(--dur) var(--ease);
-}
-
-.dtable tbody tr:hover { background: rgba(34,211,238,.02); }
-
-.dtable tbody td {
-    padding: 14px 16px;
-    font-size: 13px;
 }
 
 .t-mono { font-family: var(--font-mono); font-size: 12px; }
@@ -209,6 +231,11 @@ html, body {
     align-items: center;
     border-top: 1px solid var(--border-faint);
     background: var(--surface-2);
+}
+.scc-wrap {
+    max-width: 1440px;
+    margin: 0 auto;
+    padding: 24px;
 }
 </style>
 

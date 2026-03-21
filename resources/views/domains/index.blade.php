@@ -1,5 +1,6 @@
 @extends('layouts.panel')
 
+
 @section('content')
 
 {{-- ══════════════════════════════════════════════════════════════════
@@ -110,17 +111,53 @@ body {
 /* ─────────────────────────────────────────────────────
    §5  SYNCED DATA TABLE
 ───────────────────────────────────────────────────── */
-.dtable { width: 100%; border-collapse: collapse; }
-.dtable thead th {
-    font-family: var(--font-mono); font-size: 9px; font-weight: 700;
-    text-transform: uppercase; color: var(--text-secondary);
-    padding: 0 16px 10px; text-align: left;
-    border-bottom: 1px solid var(--border-faint);
+.dtable {
+    width: 100%;
+    border-collapse: collapse;
+    border-spacing: 0;
 }
-.dtable tbody tr { border-bottom: 1px solid var(--border-faint); transition: background var(--dur) var(--ease); }
-.dtable tbody tr:hover { background: rgba(34,211,238,.02); }
-.dtable tbody td { padding: 14px 16px; vertical-align: middle; }
 
+/* HEADER */
+.dtable thead th {
+    font-family: var(--font-mono) !important;
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: .08em;
+    color: var(--text-secondary);
+    padding: 12px 15px;
+    background: rgba(255, 255, 255, 0.02);
+    border-bottom: 2px solid var(--border-faint);
+    border-right: 1px solid var(--border-faint);
+    text-align: left;
+}
+
+/* ROW */
+.dtable tbody tr {
+    border-bottom: 1px solid var(--border-faint);
+    transition: .15s;
+}
+
+.dtable tbody tr:nth-child(even) {
+    background: rgba(255,255,255,0.01);
+}
+
+.dtable tbody tr:hover {
+    background: rgba(34,211,238,.04);
+}
+
+/* CELL */
+.dtable td {
+    padding: 12px 15px;
+    font-size: 13px;
+    color: var(--text-primary);
+    border-right: 1px solid var(--border-faint);
+}
+
+/* Cột cuối bỏ border */
+.dtable td:last-child,
+.dtable th:last-child {
+    border-right: none;
+}
 /* Status Badges */
 .badge {
     padding: 3px 10px; border-radius: 4px; font-family: var(--font-mono); font-size: 10px; font-weight: 700;
@@ -178,7 +215,7 @@ body {
                         <th>Root Path</th>
                         <th>PHP</th>
                         <th>Status</th>
-                        <th style="text-align:right">Management</th>
+                        <th >Management</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -194,17 +231,20 @@ body {
                                 <span class="badge badge--active">Active</span>
                             @endif
                         </td>
-                        <td style="text-align:right">
-                            <div style="display:flex; justify-content:flex-end; gap:20px; align-items:center;">
+                        <td>
+                            <div style="display:flex; gap:20px; align-items:center;">
                                 {{-- Toggle --}}
                                 <form action="/domains/{{ $domain->id }}/toggle" method="POST">
                                     @csrf
-                                    <button type="submit" class="action-btn" style="color: {{ ($domain->is_active ?? true) ? 'var(--green)' : 'var(--red)' }}">
+                                    <button type="submit" class="action-btn"
+                                        style="color: {{ ($domain->is_active ?? true) ? 'var(--green)' : 'var(--red)' }}">
                                         {{ ($domain->is_active ?? true) ? '● ON' : '○ OFF' }}
                                     </button>
                                 </form>
+
                                 {{-- Delete --}}
-                                <form action="/domains/{{ $domain->id }}" method="POST" onsubmit="return confirm('Xác nhận xóa domain này?');">
+                                <form action="/domains/{{ $domain->id }}" method="POST"
+                                    onsubmit="return confirm('Xác nhận xóa domain này?');">
                                     @csrf @method('DELETE')
                                     <button type="submit" class="action-btn btn-delete">Delete</button>
                                 </form>
