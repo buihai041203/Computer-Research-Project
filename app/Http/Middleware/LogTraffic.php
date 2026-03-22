@@ -18,6 +18,29 @@ class LogTraffic
     {
         $ip = $request->ip();
 
+        // Panel routes luôn được đi qua để tránh tự khóa admin
+        if (
+            $request->is('dashboard*') ||
+            $request->is('api/*') ||
+            $request->is('domains*') ||
+            $request->is('login') ||
+            $request->is('register') ||
+            $request->is('profile*') ||
+            $request->is('firewall*') ||
+            $request->is('logs*') ||
+            $request->is('traffic*') ||
+            $request->is('security*') ||
+            $request->is('databases*')
+        ) {
+            return $next($request);
+        }
+
+        // Never block local/system/whitelisted IPs
+        if ($this->isSystemIp($ip)) {
+            return $next($request);
+        }
+
+        // Bị block thì chặn ở lớp ứng dụng (áp cho sites)
         if (BlockedIP::where('ip', $ip)->exists()) {
             abort(403, 'Your IP has been blocked');
         }
@@ -26,12 +49,6 @@ class LogTraffic
         if (
             $request->method() !== 'GET' ||
             !$request->acceptsHtml() ||
-            $request->is('dashboard*') ||
-            $request->is('api/*') ||
-            $request->is('domains*') ||
-            $request->is('login') ||
-            $request->is('register') ||
-            $request->is('profile*') ||
             preg_match('/\.(css|js|map|png|jpg|jpeg|gif|svg|ico|webp|woff|woff2|ttf|eot|txt|xml)$/i', $request->path())
         ) {
             return $next($request);
