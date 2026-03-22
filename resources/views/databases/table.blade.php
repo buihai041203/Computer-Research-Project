@@ -7,7 +7,6 @@
 <div style="margin:10px 0; display:flex; gap:12px;">
     <a href="{{ route('databases.table', [$domainModel->domain, $table]) }}">Browse</a>
     <a href="{{ route('databases.structure', [$domainModel->domain, $table]) }}">Structure</a>
-    <a href="{{ route('databases.designer', $domainModel->domain) }}">Designer</a>
 </div>
 
 @if(session('success'))

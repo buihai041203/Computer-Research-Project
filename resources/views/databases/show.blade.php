@@ -13,7 +13,6 @@
     @endif
 
     <div style="display:flex; gap:10px; margin-bottom:16px;">
-        <a href="{{ route('databases.designer', $domainModel->domain) }}" style="padding:6px 10px; background:#0ea5e9; color:white; text-decoration:none; border-radius:6px;">Designer</a>
         <a href="{{ route('databases.export', $domainModel->domain) }}" style="padding:6px 10px; background:#16a34a; color:white; text-decoration:none; border-radius:6px;">Export SQL</a>
     </div>
 
