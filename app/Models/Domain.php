@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use App\Models\SiteDatabase;
 
 class Domain extends Model
 {
@@ -10,7 +11,12 @@ class Domain extends Model
         'domain',
         'status',
         'agent_key',
-        'root_path',   // Thêm dòng này
-        'php_version', // Thêm dòng này
+        'root_path',
+        'php_version',
     ];
+
+    public function databaseConfig()
+    {
+        return $this->hasOne(SiteDatabase::class, 'domain_id');
+    }
 }

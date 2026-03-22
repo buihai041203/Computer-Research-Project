@@ -58,10 +58,11 @@ Route::middleware('auth')->group(function () {
     Route::post('/api/ai-chat', [AIController::class, 'chat']);
 
     Route::get('/databases', [DatabaseManagerController::class, 'index'])->name('databases.index');
-    Route::post('/databases/{site}/config', [DatabaseManagerController::class, 'updateConfig'])->name('databases.config');
-    Route::get('/databases/{site}', [DatabaseManagerController::class, 'show'])->name('databases.show');
-    Route::get('/databases/{site}/table/{table}', [DatabaseManagerController::class, 'table'])->name('databases.table');
-    Route::post('/databases/{site}/query', [DatabaseManagerController::class, 'runQuery'])->name('databases.query');
+    Route::post('/databases/{domain}/config', [DatabaseManagerController::class, 'updateConfig'])->name('databases.config');
+    Route::get('/databases/{domain}', [DatabaseManagerController::class, 'show'])->name('databases.show');
+    Route::get('/databases/{domain}/table/{table}', [DatabaseManagerController::class, 'table'])->name('databases.table');
+    Route::post('/databases/{domain}/query', [DatabaseManagerController::class, 'runQuery'])->name('databases.query');
+    Route::post('/databases/{domain}/table/{table}/row/{id}', [DatabaseManagerController::class, 'updateRow'])->name('databases.row.update');
 });
 
 // ========================
