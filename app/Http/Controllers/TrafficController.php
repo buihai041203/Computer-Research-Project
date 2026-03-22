@@ -31,17 +31,16 @@ class TrafficController extends Controller
 
     public function stats()
     {
-        $human = TrafficLog::where('type', 'human')
-            ->where('created_at', '>=', now()->subMinute())
-            ->count();
+        // Đồng bộ với trang Traffic: cùng nguồn traffic_logs và cùng cửa sổ mẫu gần nhất
+        $sample = TrafficLog::latest()->limit(200)->get(['type']);
 
-        $bot = TrafficLog::where('type', 'bot')
-            ->where('created_at', '>=', now()->subMinute())
-            ->count();
+        $human = $sample->where('type', 'human')->count();
+        $bot = $sample->where('type', 'bot')->count();
 
         return response()->json([
             'human' => $human,
             'bot' => $bot,
+            'total' => $sample->count(),
         ]);
     }
 }
