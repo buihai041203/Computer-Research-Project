@@ -9,7 +9,6 @@ use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\FirewallController;
 use App\Http\Controllers\LogController;
 use App\Http\Controllers\AIController;
-use App\Models\TrafficLog;
 use App\Http\Controllers\DatabaseManagerController;
 
 // ========================
@@ -66,25 +65,6 @@ Route::middleware('auth')->group(function () {
     Route::get('/databases/{domain}/table/{table}', [DatabaseManagerController::class, 'table'])->name('databases.table');
     Route::post('/databases/{domain}/query', [DatabaseManagerController::class, 'runQuery'])->name('databases.query');
     Route::post('/databases/{domain}/table/{table}/row/{id}', [DatabaseManagerController::class, 'updateRow'])->name('databases.row.update');
-});
-
-// ========================
-// API (NO AUTH)
-// ========================
-Route::get('/api/traffic-stats', function () {
-
-    $human = TrafficLog::where('type', 'human')
-        ->where('created_at', '>=', now()->subMinute())
-        ->count();
-
-    $bot = TrafficLog::where('type', 'bot')
-        ->where('created_at', '>=', now()->subMinute())
-        ->count();
-
-    return [
-        'human' => $human,
-        'bot' => $bot
-    ];
 });
 
 // ========================
