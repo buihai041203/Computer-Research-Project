@@ -118,6 +118,21 @@ class LogTraffic
         return $next($request);
     }
 
+    private function isSystemIp(string $ip): bool
+    {
+        if (in_array($ip, ['127.0.0.1', '::1'])) {
+            return true;
+        }
+
+        // private ranges + server public IPs (from env)
+        if (!filter_var($ip, FILTER_VALIDATE_IP, FILTER_FLAG_NO_PRIV_RANGE | FILTER_FLAG_NO_RES_RANGE)) {
+            return true;
+        }
+
+        $whitelist = array_filter(array_map('trim', explode(',', (string) env('FIREWALL_WHITELIST_IPS', ''))));
+        return in_array($ip, $whitelist, true);
+    }
+
     private function sendTelegramOnce(string $cacheKey, string $message, int $ttlSeconds = 300): void
     {
         if (Cache::has($cacheKey)) {
