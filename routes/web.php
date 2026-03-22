@@ -51,6 +51,7 @@ Route::middleware('auth')->group(function () {
     // Firewall
     Route::get('/firewall', [FirewallController::class, 'index']);
     Route::post('/firewall/block', [FirewallController::class, 'block']);
+    Route::post('/firewall/auto-block', [FirewallController::class, 'autoBlock'])->name('firewall.auto-block');
     Route::delete('/firewall/{id}', [FirewallController::class, 'unblock']);
 
     // Logs

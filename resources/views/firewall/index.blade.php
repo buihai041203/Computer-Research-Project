@@ -178,9 +178,24 @@ html, body {
 
 <div class="scc-wrap">
 
-    <h1 class="page-title">
-        Firewall <em>Control</em>
-    </h1>
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:14px; gap:10px;">
+        <h1 class="page-title" style="margin:0;">
+            Firewall <em>Control</em>
+        </h1>
+
+        <form method="POST" action="{{ route('firewall.auto-block') }}" onsubmit="return confirm('Chạy auto-block dựa trên traffic bất thường?');">
+            @csrf
+            <button class="btn-danger" type="submit">AUTO BLOCK SUSPICIOUS IPs</button>
+        </form>
+    </div>
+
+    @if(session('success'))
+        <div style="margin-bottom:10px; color:var(--green); font-family:var(--font-mono); font-size:11px;">{{ session('success') }}</div>
+    @endif
+
+    @if($errors->any())
+        <div style="margin-bottom:10px; color:var(--red); font-family:var(--font-mono); font-size:11px;">{{ $errors->first() }}</div>
+    @endif
 
     {{-- FORM --}}
     <div class="card" style="padding:20px; margin-bottom:20px;">
@@ -201,7 +216,47 @@ html, body {
         </form>
     </div>
 
-    {{-- TABLE --}}
+    {{-- SUSPICIOUS IP (last 1h) --}}
+    <div class="card" style="margin-bottom:20px;">
+        <table class="dtable">
+            <thead>
+                <tr>
+                    <th colspan="4">SUSPICIOUS IPs (LAST 1 HOUR)</th>
+                </tr>
+                <tr>
+                    <th>IP ADDRESS</th>
+                    <th>TOTAL REQ</th>
+                    <th>HIGH/CRITICAL</th>
+                    <th>QUICK ACTION</th>
+                </tr>
+            </thead>
+            <tbody>
+            @forelse(($suspicious ?? collect()) as $s)
+                <tr>
+                    <td class="t-mono" style="color:var(--cyan)">{{ $s->ip }}</td>
+                    <td class="t-mono">{{ $s->total }}</td>
+                    <td class="t-mono" style="color:{{ ($s->risky ?? 0) > 0 ? 'var(--red)' : 'var(--text-secondary)' }}">{{ $s->risky ?? 0 }}</td>
+                    <td>
+                        <form method="POST" action="/firewall/block">
+                            @csrf
+                            <input type="hidden" name="ip" value="{{ $s->ip }}">
+                            <input type="hidden" name="reason" value="Manual quick block from suspicious list">
+                            <button class="btn-danger" type="submit">BLOCK</button>
+                        </form>
+                    </td>
+                </tr>
+            @empty
+                <tr>
+                    <td colspan="4" style="text-align:center; padding:20px; font-family:var(--font-mono); color:var(--text-secondary)">
+                        // NO SUSPICIOUS IP DETECTED
+                    </td>
+                </tr>
+            @endforelse
+            </tbody>
+        </table>
+    </div>
+
+    {{-- BLOCKED TABLE --}}
     <div class="card">
         <table class="dtable">
 
