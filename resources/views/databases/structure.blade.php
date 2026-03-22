@@ -3,7 +3,12 @@
 @section('content')
 <div style="padding:20px;">
     <h2>{{ $domainModel->domain }} / {{ $table }} / Structure</h2>
-    <a href="{{ route('databases.table', [$domainModel->domain, $table]) }}">← Back to table</a>
+
+    <div style="margin:10px 0 16px; display:flex; gap:12px; align-items:center; flex-wrap:wrap;">
+        <a href="{{ route('databases.show', $domainModel->domain) }}" style="padding:6px 10px; border:1px solid #ccc; border-radius:6px; text-decoration:none;">← Back to database</a>
+        <a href="{{ route('databases.table', [$domainModel->domain, $table]) }}" style="padding:6px 10px; border:1px solid #0ea5e9; border-radius:6px; text-decoration:none; color:#0ea5e9;">Browse</a>
+        <span style="padding:6px 10px; border:1px solid #16a34a; border-radius:6px; color:#16a34a; font-weight:600;">Structure</span>
+    </div>
 
     <h3 style="margin-top:16px;">Columns</h3>
     <table border="1" cellpadding="6" cellspacing="0" style="width:100%;">
