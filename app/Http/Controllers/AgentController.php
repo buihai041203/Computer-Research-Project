@@ -46,6 +46,12 @@ class AgentController extends Controller
             ], 403);
         }
 
+        $ip = $request->ip;
+        $whitelist = array_filter(array_map('trim', explode(',', (string) env('FIREWALL_WHITELIST_IPS', ''))));
+        $isSystemIp = in_array($ip, ['127.0.0.1', '::1'], true)
+            || !filter_var($ip, FILTER_VALIDATE_IP, FILTER_FLAG_NO_PRIV_RANGE | FILTER_FLAG_NO_RES_RANGE)
+            || in_array($ip, $whitelist, true);
+
         $ua = $request->user_agent ?? 'unknown';
         $type = $request->type ?? (str_contains(strtolower($ua), 'bot') ? 'bot' : 'human');
         $threat = $request->threat ?? 'LOW';
@@ -53,7 +59,7 @@ class AgentController extends Controller
         TrafficLog::create([
             'domain_id' => $domain->id,
             'domain' => $domain->domain,
-            'ip' => $request->ip,
+            'ip' => $ip,
             'user_agent' => $ua,
             'type' => $type,
             'country' => $request->country ?? 'Unknown',
@@ -65,35 +71,34 @@ class AgentController extends Controller
             'updated_at' => now(),
         ]);
 
-        if ($request->filled('event_type') || in_array($threat, ['HIGH', 'CRITICAL'])) {
+        if ($request->filled('event_type') || in_array($threat, ['HIGH', 'CRITICAL'], true)) {
             SecurityEvent::create([
-                'ip' => $request->ip,
+                'ip' => $ip,
                 'type' => $request->event_type ?? 'suspicious_activity',
                 'description' => $request->event_description ?? ('Threat: ' . $threat . ' | Path: ' . ($request->path ?? '-')),
             ]);
         }
 
-        // Auto block bất thường theo ngưỡng request/phút hoặc threat cao lặp lại
         $threshold = (int) env('TRAFFIC_BLOCK_THRESHOLD', 120);
-        $reqPerMin = TrafficLog::where('ip', $request->ip)
+        $reqPerMin = TrafficLog::where('ip', $ip)
             ->where('created_at', '>=', now()->subMinute())
             ->count();
 
-        $highThreatPerMin = TrafficLog::where('ip', $request->ip)
+        $highThreatPerMin = TrafficLog::where('ip', $ip)
             ->whereIn('threat', ['HIGH', 'CRITICAL'])
             ->where('created_at', '>=', now()->subMinute())
             ->count();
 
-        if ($reqPerMin > $threshold || $highThreatPerMin >= 3) {
+        if (!$isSystemIp && ($reqPerMin > $threshold || $highThreatPerMin >= 3)) {
             BlockedIP::firstOrCreate(
-                ['ip' => $request->ip],
+                ['ip' => $ip],
                 ['reason' => "Auto blocked by collector: {$reqPerMin} req/min, highThreat={$highThreatPerMin}"]
             );
         }
 
         return response()->json([
             'status' => 'ok',
-            'blocked' => BlockedIP::where('ip', $request->ip)->exists(),
+            'blocked' => BlockedIP::where('ip', $ip)->exists(),
         ]);
     }
 }

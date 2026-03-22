@@ -31,6 +31,11 @@ class FirewallController extends Controller
             'reason' => 'nullable|string|max:500',
         ]);
 
+        $whitelist = array_filter(array_map('trim', explode(',', (string) env('FIREWALL_WHITELIST_IPS', '127.0.0.1,::1'))));
+        if (in_array($data['ip'], $whitelist, true)) {
+            return back()->with('error', 'IP này nằm trong whitelist hệ thống, không thể block.');
+        }
+
         BlockedIP::firstOrCreate(
             ['ip' => $data['ip']],
             ['reason' => $data['reason'] ?? 'Manual block from firewall panel']
