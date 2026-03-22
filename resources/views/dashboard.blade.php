@@ -761,7 +761,7 @@ body {
                     <td class="td-mono">{{ $v->ip }}</td>
 
                     <td>
-                        @if($v->is_bot)
+                        @if(($v->type ?? 'human') === 'bot' || ($v->is_bot ?? false))
                             <span class="badge badge--bot">⚠ Bot</span>
                         @else
                             <span class="badge badge--human">✓ Human</span>
