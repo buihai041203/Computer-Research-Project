@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\BlockedIP;
 use App\Models\Domain;
 use App\Models\SecurityEvent;
 use App\Models\TrafficLog;
@@ -72,8 +73,27 @@ class AgentController extends Controller
             ]);
         }
 
+        // Auto block bất thường theo ngưỡng request/phút hoặc threat cao lặp lại
+        $threshold = (int) env('TRAFFIC_BLOCK_THRESHOLD', 120);
+        $reqPerMin = TrafficLog::where('ip', $request->ip)
+            ->where('created_at', '>=', now()->subMinute())
+            ->count();
+
+        $highThreatPerMin = TrafficLog::where('ip', $request->ip)
+            ->whereIn('threat', ['HIGH', 'CRITICAL'])
+            ->where('created_at', '>=', now()->subMinute())
+            ->count();
+
+        if ($reqPerMin > $threshold || $highThreatPerMin >= 3) {
+            BlockedIP::firstOrCreate(
+                ['ip' => $request->ip],
+                ['reason' => "Auto blocked by collector: {$reqPerMin} req/min, highThreat={$highThreatPerMin}"]
+            );
+        }
+
         return response()->json([
             'status' => 'ok',
+            'blocked' => BlockedIP::where('ip', $request->ip)->exists(),
         ]);
     }
 }
