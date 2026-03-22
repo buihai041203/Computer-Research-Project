@@ -250,13 +250,28 @@ html, body {
             </p>
         </div>
         
-        <div class="toolbar">
+        <div class="toolbar" style="align-items:center;">
             <input type="text" id="js-search" class="input-cyber" placeholder="SEARCH IP / COUNTRY...">
             <button class="filter-btn active" data-filter="all">All</button>
             <button class="filter-btn" data-filter="human">Human</button>
             <button class="filter-btn" data-filter="bot" style="color:var(--red)">Bot</button>
+
+            <form method="POST" action="{{ route('traffic.clear') }}" onsubmit="return confirm('Xóa toàn bộ traffic logs?');" style="margin-left:6px;">
+                @csrf
+                <button type="submit" class="filter-btn" style="border-color: rgba(248,113,113,.35); color: var(--red);">
+                    Clear Logs
+                </button>
+            </form>
         </div>
     </header>
+
+    @if(session('success'))
+        <div style="margin-bottom:12px; color:var(--green); font-family:var(--font-mono); font-size:11px;">{{ session('success') }}</div>
+    @endif
+
+    @if(session('error'))
+        <div style="margin-bottom:12px; color:var(--red); font-family:var(--font-mono); font-size:11px;">{{ session('error') }}</div>
+    @endif
 
     @php
         $total = count($visitors);

@@ -150,9 +150,26 @@ body {
 
 <div class="scc-wrap">
 
-    <h1 class="page-title">
-        Security <em>Events</em>
-    </h1>
+    <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:14px;">
+        <h1 class="page-title" style="margin-bottom:0;">
+            Security <em>Events</em>
+        </h1>
+
+        <form method="POST" action="{{ route('security.clear') }}" onsubmit="return confirm('Xóa toàn bộ security logs?');">
+            @csrf
+            <button type="submit" style="padding:7px 12px; border-radius:8px; border:1px solid rgba(248,113,113,.35); background:rgba(248,113,113,.10); color:var(--red); font-family:var(--font-mono); font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:.06em; cursor:pointer;">
+                Clear Logs
+            </button>
+        </form>
+    </div>
+
+    @if(session('success'))
+        <div style="color:var(--cyan); margin-bottom:10px; font-family:var(--font-mono); font-size:11px;">{{ session('success') }}</div>
+    @endif
+
+    @if(session('error'))
+        <div style="color:var(--red); margin-bottom:10px; font-family:var(--font-mono); font-size:11px;">{{ session('error') }}</div>
+    @endif
 
     <div class="card">
         <table class="dtable">
