@@ -47,12 +47,16 @@ class FirewallController extends Controller
     public function autoBlock(Request $request)
     {
         $threshold = (int) env('TRAFFIC_BLOCK_THRESHOLD', 120);
+        $highRepeat = (int) env('FIREWALL_HIGH_REPEAT', 2);
+        $criticalInstant = (bool) env('FIREWALL_CRITICAL_INSTANT_BLOCK', true);
 
         $candidates = TrafficLog::query()
-            ->selectRaw('ip, COUNT(*) as total, SUM(CASE WHEN threat IN ("HIGH","CRITICAL") THEN 1 ELSE 0 END) as risky')
+            ->selectRaw('ip, COUNT(*) as total,
+                SUM(CASE WHEN threat = "HIGH" THEN 1 ELSE 0 END) as high_count,
+                SUM(CASE WHEN threat = "CRITICAL" THEN 1 ELSE 0 END) as critical_count')
             ->where('created_at', '>=', now()->subMinute())
             ->groupBy('ip')
-            ->havingRaw('COUNT(*) > ? OR SUM(CASE WHEN threat IN ("HIGH","CRITICAL") THEN 1 ELSE 0 END) >= 3', [$threshold])
+            ->havingRaw('COUNT(*) > ? OR SUM(CASE WHEN threat = "HIGH" THEN 1 ELSE 0 END) >= ? OR (? = 1 AND SUM(CASE WHEN threat = "CRITICAL" THEN 1 ELSE 0 END) >= 1)', [$threshold, $highRepeat, $criticalInstant ? 1 : 0])
             ->get();
 
         $blocked = 0;

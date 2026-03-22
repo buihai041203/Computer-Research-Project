@@ -80,19 +80,41 @@ class AgentController extends Controller
         }
 
         $threshold = (int) env('TRAFFIC_BLOCK_THRESHOLD', 120);
+        $highRepeat = (int) env('FIREWALL_HIGH_REPEAT', 2);
+        $criticalInstant = (bool) env('FIREWALL_CRITICAL_INSTANT_BLOCK', true);
+
         $reqPerMin = TrafficLog::where('ip', $ip)
             ->where('created_at', '>=', now()->subMinute())
             ->count();
 
         $highThreatPerMin = TrafficLog::where('ip', $ip)
-            ->whereIn('threat', ['HIGH', 'CRITICAL'])
+            ->where('threat', 'HIGH')
             ->where('created_at', '>=', now()->subMinute())
             ->count();
 
-        if (!$isSystemIp && ($reqPerMin > $threshold || $highThreatPerMin >= 3)) {
+        $criticalPerMin = TrafficLog::where('ip', $ip)
+            ->where('threat', 'CRITICAL')
+            ->where('created_at', '>=', now()->subMinute())
+            ->count();
+
+        $shouldBlock = false;
+        $reason = null;
+
+        if ($reqPerMin > $threshold) {
+            $shouldBlock = true;
+            $reason = "Auto blocked: {$reqPerMin} req/min > threshold {$threshold}";
+        } elseif ($criticalInstant && $criticalPerMin >= 1) {
+            $shouldBlock = true;
+            $reason = "Auto blocked: CRITICAL threat detected";
+        } elseif ($highThreatPerMin >= $highRepeat) {
+            $shouldBlock = true;
+            $reason = "Auto blocked: HIGH threat repeated {$highThreatPerMin}/min";
+        }
+
+        if (!$isSystemIp && $shouldBlock) {
             BlockedIP::firstOrCreate(
                 ['ip' => $ip],
-                ['reason' => "Auto blocked by collector: {$reqPerMin} req/min, highThreat={$highThreatPerMin}"]
+                ['reason' => $reason]
             );
         }
 
