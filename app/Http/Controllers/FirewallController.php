@@ -21,7 +21,27 @@ class FirewallController extends Controller
             ->limit(10)
             ->get();
 
-        return view('firewall.index', compact('ips', 'suspicious'));
+        // IP nào đang tấn công web nào (multi-site view)
+        $ipByDomain = TrafficLog::query()
+            ->selectRaw('domain, ip, COUNT(*) as total, SUM(CASE WHEN threat IN ("HIGH","CRITICAL") THEN 1 ELSE 0 END) as risky, MAX(created_at) as last_seen')
+            ->where('created_at', '>=', now()->subHour())
+            ->groupBy('domain', 'ip')
+            ->orderByDesc('risky')
+            ->orderByDesc('total')
+            ->limit(100)
+            ->get();
+
+        // Website nào đang bị tấn công nhiều nhất
+        $domainAttackSummary = TrafficLog::query()
+            ->selectRaw('domain, COUNT(*) as total, SUM(CASE WHEN threat IN ("HIGH","CRITICAL") THEN 1 ELSE 0 END) as risky, COUNT(DISTINCT ip) as attacker_ips')
+            ->where('created_at', '>=', now()->subHour())
+            ->groupBy('domain')
+            ->orderByDesc('risky')
+            ->orderByDesc('total')
+            ->limit(20)
+            ->get();
+
+        return view('firewall.index', compact('ips', 'suspicious', 'ipByDomain', 'domainAttackSummary'));
     }
 
     public function block(Request $request)

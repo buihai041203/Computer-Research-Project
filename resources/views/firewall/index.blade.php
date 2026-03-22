@@ -256,6 +256,83 @@ html, body {
         </table>
     </div>
 
+    {{-- MULTI-SITE ATTACK MATRIX --}}
+    <div class="card" style="margin-bottom:20px;">
+        <table class="dtable">
+            <thead>
+                <tr>
+                    <th colspan="6">IP ATTACKING WHICH WEBSITE? (LAST 1 HOUR)</th>
+                </tr>
+                <tr>
+                    <th>DOMAIN</th>
+                    <th>IP ADDRESS</th>
+                    <th>TOTAL REQ</th>
+                    <th>HIGH/CRITICAL</th>
+                    <th>LAST SEEN</th>
+                    <th>ACTION</th>
+                </tr>
+            </thead>
+            <tbody>
+            @forelse(($ipByDomain ?? collect()) as $row)
+                <tr>
+                    <td class="t-mono">{{ $row->domain ?? '-' }}</td>
+                    <td class="t-mono" style="color:var(--cyan)">{{ $row->ip }}</td>
+                    <td class="t-mono">{{ $row->total }}</td>
+                    <td class="t-mono" style="color:{{ ($row->risky ?? 0) > 0 ? 'var(--red)' : 'var(--text-secondary)' }}">{{ $row->risky ?? 0 }}</td>
+                    <td class="t-mono">{{ $row->last_seen }}</td>
+                    <td>
+                        <form method="POST" action="/firewall/block">
+                            @csrf
+                            <input type="hidden" name="ip" value="{{ $row->ip }}">
+                            <input type="hidden" name="reason" value="Manual block from IP-by-domain matrix ({{ $row->domain }})">
+                            <button class="btn-danger" type="submit">BLOCK</button>
+                        </form>
+                    </td>
+                </tr>
+            @empty
+                <tr>
+                    <td colspan="6" style="text-align:center; padding:20px; font-family:var(--font-mono); color:var(--text-secondary)">
+                        // NO ATTACK MATRIX DATA
+                    </td>
+                </tr>
+            @endforelse
+            </tbody>
+        </table>
+    </div>
+
+    {{-- DOMAIN ATTACK SUMMARY --}}
+    <div class="card" style="margin-bottom:20px;">
+        <table class="dtable">
+            <thead>
+                <tr>
+                    <th colspan="4">WEBSITE ATTACK SUMMARY (LAST 1 HOUR)</th>
+                </tr>
+                <tr>
+                    <th>DOMAIN</th>
+                    <th>TOTAL REQ</th>
+                    <th>RISKY REQ</th>
+                    <th>DISTINCT ATTACKER IPs</th>
+                </tr>
+            </thead>
+            <tbody>
+            @forelse(($domainAttackSummary ?? collect()) as $row)
+                <tr>
+                    <td class="t-mono">{{ $row->domain ?? '-' }}</td>
+                    <td class="t-mono">{{ $row->total }}</td>
+                    <td class="t-mono" style="color:{{ ($row->risky ?? 0) > 0 ? 'var(--red)' : 'var(--text-secondary)' }}">{{ $row->risky ?? 0 }}</td>
+                    <td class="t-mono">{{ $row->attacker_ips ?? 0 }}</td>
+                </tr>
+            @empty
+                <tr>
+                    <td colspan="4" style="text-align:center; padding:20px; font-family:var(--font-mono); color:var(--text-secondary)">
+                        // NO DOMAIN SUMMARY DATA
+                    </td>
+                </tr>
+            @endforelse
+            </tbody>
+        </table>
+    </div>
+
     {{-- BLOCKED TABLE --}}
     <div class="card">
         <table class="dtable">
