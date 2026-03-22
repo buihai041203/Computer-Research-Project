@@ -8,56 +8,36 @@ use App\Http\Controllers\SecurityController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\FirewallController;
 use App\Http\Controllers\LogController;
-use App\Http\Controllers\AIController;
 use App\Http\Controllers\DatabaseManagerController;
 
-// ========================
-// PUBLIC
-// ========================
 Route::get('/', function () {
     return view('welcome');
 });
 
-// ========================
-// DASHBOARD
-// ========================
 Route::get('/dashboard', [DashboardController::class, 'index'])
     ->middleware(['auth', 'verified'])
     ->name('dashboard');
 
-// ========================
-// AUTH GROUP
-// ========================
 Route::middleware('auth')->group(function () {
-
-    // Profile
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 
-    // Domains
     Route::resource('domains', DomainController::class);
     Route::post('/domains/{id}/toggle', [DomainController::class, 'toggle']);
 
-    // Traffic
     Route::get('/traffic', [TrafficController::class, 'index']);
     Route::post('/traffic/clear', [TrafficController::class, 'clear'])->name('traffic.clear');
 
-    // Security
     Route::get('/security', [SecurityController::class, 'index']);
     Route::post('/security/clear', [SecurityController::class, 'clear'])->name('security.clear');
 
-    // Firewall
     Route::get('/firewall', [FirewallController::class, 'index']);
     Route::post('/firewall/block', [FirewallController::class, 'block']);
     Route::post('/firewall/auto-block', [FirewallController::class, 'autoBlock'])->name('firewall.auto-block');
     Route::delete('/firewall/{id}', [FirewallController::class, 'unblock']);
 
-    // Logs
     Route::get('/logs', [LogController::class, 'index']);
-
-    // AI CHAT
-    Route::post('/api/ai-chat', [AIController::class, 'chat']);
 
     Route::get('/databases', [DatabaseManagerController::class, 'index'])->name('databases.index');
     Route::post('/databases/{domain}/config', [DatabaseManagerController::class, 'updateConfig'])->name('databases.config');
@@ -67,5 +47,4 @@ Route::middleware('auth')->group(function () {
     Route::post('/databases/{domain}/table/{table}/row/{id}', [DatabaseManagerController::class, 'updateRow'])->name('databases.row.update');
 });
 
-// ========================
 require __DIR__.'/auth.php';
