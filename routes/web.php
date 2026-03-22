@@ -43,7 +43,11 @@ Route::middleware('auth')->group(function () {
     Route::post('/databases/{domain}/config', [DatabaseManagerController::class, 'updateConfig'])->name('databases.config');
     Route::get('/databases/{domain}', [DatabaseManagerController::class, 'show'])->name('databases.show');
     Route::get('/databases/{domain}/table/{table}', [DatabaseManagerController::class, 'table'])->name('databases.table');
+    Route::get('/databases/{domain}/table/{table}/structure', [DatabaseManagerController::class, 'structure'])->name('databases.structure');
+    Route::get('/databases/{domain}/designer', [DatabaseManagerController::class, 'designer'])->name('databases.designer');
     Route::post('/databases/{domain}/query', [DatabaseManagerController::class, 'runQuery'])->name('databases.query');
+    Route::post('/databases/{domain}/import', [DatabaseManagerController::class, 'import'])->name('databases.import');
+    Route::get('/databases/{domain}/export', [DatabaseManagerController::class, 'export'])->name('databases.export');
     Route::post('/databases/{domain}/table/{table}/row/{id}', [DatabaseManagerController::class, 'updateRow'])->name('databases.row.update');
 });
 
