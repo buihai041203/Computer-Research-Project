@@ -2,19 +2,20 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Visitor;
+use App\Models\TrafficLog;
 
 class DashboardController extends Controller
 {
     public function index()
     {
-        $totalVisitors = Visitor::count();
+        // Đồng bộ với trang Traffic/Logs: cùng nguồn traffic_logs, cùng sample window
+        $sample = TrafficLog::latest()->limit(200)->get(['type']);
 
-        $humanVisitors = Visitor::where('is_bot', false)->count();
+        $totalVisitors = $sample->count();
+        $humanVisitors = $sample->where('type', 'human')->count();
+        $botVisitors = $sample->where('type', 'bot')->count();
 
-        $botVisitors = Visitor::where('is_bot', true)->count();
-
-        $latestVisitors = Visitor::latest()->limit(10)->get();
+        $latestVisitors = TrafficLog::latest()->limit(10)->get();
 
         return view('dashboard', compact(
             'totalVisitors',
