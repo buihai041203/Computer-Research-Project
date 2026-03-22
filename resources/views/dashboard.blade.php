@@ -1248,7 +1248,7 @@ const Actions = {
         btn.textContent = '…';
 
         try {
-            const data = await API.post('/api/firewall/block', { ip });
+            const data = await API.post('/firewall/block', { ip });
             Toast.show(data.message ?? `${ip} has been blocked.`, 'success');
             btn.closest('tr')?.remove();
         } catch (err) {
