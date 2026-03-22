@@ -250,17 +250,32 @@ html, body {
             </p>
         </div>
         
-        <div class="toolbar">
+        <div class="toolbar" style="align-items:center;">
             <input type="text" id="js-search" class="input-cyber" placeholder="SEARCH IP / COUNTRY...">
             <button class="filter-btn active" data-filter="all">All</button>
             <button class="filter-btn" data-filter="human">Human</button>
             <button class="filter-btn" data-filter="bot" style="color:var(--red)">Bot</button>
+
+            <form method="POST" action="{{ route('traffic.clear') }}" onsubmit="return confirm('Xóa toàn bộ traffic logs?');" style="margin-left:6px;">
+                @csrf
+                <button type="submit" class="filter-btn" style="border-color: rgba(248,113,113,.35); color: var(--red);">
+                    Clear Logs
+                </button>
+            </form>
         </div>
     </header>
 
+    @if(session('success'))
+        <div style="margin-bottom:12px; color:var(--green); font-family:var(--font-mono); font-size:11px;">{{ session('success') }}</div>
+    @endif
+
+    @if(session('error'))
+        <div style="margin-bottom:12px; color:var(--red); font-family:var(--font-mono); font-size:11px;">{{ session('error') }}</div>
+    @endif
+
     @php
-        $total = count($visitors);
-        $botCount = $visitors->where('is_bot', true)->count();
+        $total = count($logs);
+        $botCount = $logs->filter(fn($x) => (($x->type ?? '') === 'bot') || ((int)($x->is_bot ?? 0) === 1))->count();
         $humanCount = $total - $botCount;
         $botPct = $total > 0 ? round($botCount / $total * 100) : 0;
         $humanPct = $total > 0 ? round($humanCount / $total * 100) : 0;
@@ -295,24 +310,25 @@ html, body {
                 </tr>
             </thead>
             <tbody id="js-tbody">
-                @forelse($visitors as $v)
-                <tr data-type="{{ $v->is_bot ? 'bot' : 'human' }}" 
-                    data-ip="{{ strtolower($v->ip) }}" 
-                    data-country="{{ strtolower($v->country) }}">
+                @forelse($logs as $v)
+                @php $isBot = (($v->type ?? '') === 'bot') || ((int)($v->is_bot ?? 0) === 1); @endphp
+                <tr data-type="{{ $isBot ? 'bot' : 'human' }}" 
+                    data-ip="{{ strtolower($v->ip ?? '') }}" 
+                    data-country="{{ strtolower($v->country ?? 'unknown') }}">
                     <td style="font-family: var(--font-mono); font-size: 10px; color: var(--text-secondary)">{{ str_pad($loop->iteration, 3, '0', STR_PAD_LEFT) }}</td>
                     <td class="t-mono" style="color:var(--cyan)">{{ $v->ip }}</td>
                     <td>
-                        <span style="font-size: 13px;">🌍 {{ $v->country }}</span>
+                        <span style="font-size: 13px;">🌍 {{ $v->country ?? 'Unknown' }}</span>
                     </td>
                     <td>
-                        @if($v->is_bot)
+                        @if($isBot)
                             <span class="badge badge--bot">BOT</span>
                         @else
                             <span class="badge badge--human">HUMAN</span>
                         @endif
                     </td>
                     <td class="t-mono" style="font-size: 10px; color: var(--text-secondary)">
-                        {{ $v->created_at->diffForHumans() }}
+                        {{ optional($v->created_at)->diffForHumans() }}
                     </td>
                 </tr>
                 @empty
@@ -326,14 +342,13 @@ html, body {
         </table>
 
         {{-- PAGINATION --}}
-        @if($visitors instanceof \Illuminate\Pagination\LengthAwarePaginator && $visitors->hasPages())
+        @if($logs instanceof \Illuminate\Pagination\LengthAwarePaginator && $logs->hasPages())
         <div class="pager">
             <span style="font-family: var(--font-mono); font-size: 9px; color: var(--text-secondary)">
-                SHOWING {{ $visitors->firstItem() }}–{{ $visitors->lastItem() }} OF {{ $visitors->total() }}
+                SHOWING {{ $logs->firstItem() }}–{{ $logs->lastItem() }} OF {{ $logs->total() }}
             </span>
             <div style="display: flex; gap: 8px;">
-                {{-- Đơn giản hóa pagination link để giữ đồng bộ thiết kế --}}
-                {!! $visitors->links() !!}
+                {!! $logs->links() !!}
             </div>
         </div>
         @endif

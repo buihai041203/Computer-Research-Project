@@ -761,7 +761,7 @@ body {
                     <td class="td-mono">{{ $v->ip }}</td>
 
                     <td>
-                        @if($v->is_bot)
+                        @if(($v->type ?? 'human') === 'bot' || ($v->is_bot ?? false))
                             <span class="badge badge--bot">⚠ Bot</span>
                         @else
                             <span class="badge badge--human">✓ Human</span>
@@ -1248,7 +1248,7 @@ const Actions = {
         btn.textContent = '…';
 
         try {
-            const data = await API.post('/api/firewall/block', { ip });
+            const data = await API.post('/firewall/block', { ip });
             Toast.show(data.message ?? `${ip} has been blocked.`, 'success');
             btn.closest('tr')?.remove();
         } catch (err) {
