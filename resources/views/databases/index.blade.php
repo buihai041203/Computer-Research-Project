@@ -178,39 +178,31 @@ html, body {
                 </tr>
             </thead>
             <tbody>
-                @forelse($sites as $s)
+            @forelse($domains as $d)
+                @php $cfg = $d->databaseConfig; @endphp
                 <tr>
-                    <td>{{ $s->site_name }}</td>
-
-                    <td style="font-family: var(--font-mono);">
-                        {{ $s->db_name ?? 'chưa cấu hình' }}
-                    </td>
-
-                    <td>{{ $s->db_host }}</td>
-
-                    <td class="t-mono">{{ $s->db_port }}</td>
-
+                    <td>{{ $d->domain }}</td>
+                    <td style="font-family: var(--font-mono);">{{ $cfg->db_name ?? 'chưa cấu hình' }}</td>
+                    <td>{{ $cfg->db_host ?? '-' }}</td>
+                    <td class="t-mono">{{ $cfg->db_port ?? '-' }}</td>
                     <td>
-                        @if($s->is_active)
+                        @if($cfg && $cfg->is_active)
                             <span class="badge badge--on">ON</span>
                         @else
                             <span class="badge badge--off">OFF</span>
                         @endif
                     </td>
-
                     <td>
-                        <a href="{{ route('databases.show', $s->site_name) }}" class="btn-open">
-                            Open
-                        </a>
+                        <a href="{{ route('databases.show', $d->domain) }}" class="btn-open">Open</a>
                     </td>
                 </tr>
-                @empty
+            @empty
                 <tr>
                     <td colspan="6" style="text-align:center; padding:30px; font-family:var(--font-mono); color:var(--text-secondary)">
-                        // NO DATABASE CONFIG FOUND
+                        // NO WEBSITE FOUND
                     </td>
                 </tr>
-                @endforelse
+            @endforelse
             </tbody>
         </table>
     </div>
