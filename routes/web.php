@@ -42,9 +42,11 @@ Route::middleware('auth')->group(function () {
 
     // Traffic
     Route::get('/traffic', [TrafficController::class, 'index']);
+    Route::post('/traffic/clear', [TrafficController::class, 'clear'])->name('traffic.clear');
 
     // Security
     Route::get('/security', [SecurityController::class, 'index']);
+    Route::post('/security/clear', [SecurityController::class, 'clear'])->name('security.clear');
 
     // Firewall
     Route::get('/firewall', [FirewallController::class, 'index']);
