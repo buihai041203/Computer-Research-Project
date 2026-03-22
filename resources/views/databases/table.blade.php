@@ -4,9 +4,10 @@
 <div style="padding:20px;">
 <h2>{{ $domainModel->domain }} / {{ $table }}</h2>
 <a href="{{ route('databases.show', $domainModel->domain) }}">← Back</a>
-<div style="margin:10px 0; display:flex; gap:12px;">
-    <a href="{{ route('databases.table', [$domainModel->domain, $table]) }}">Browse</a>
-    <a href="{{ route('databases.structure', [$domainModel->domain, $table]) }}">Structure</a>
+<div style="margin:10px 0 16px; display:flex; gap:12px; align-items:center; flex-wrap:wrap;">
+    <a href="{{ route('databases.show', $domainModel->domain) }}" style="padding:6px 10px; border:1px solid #ccc; border-radius:6px; text-decoration:none;">← Back to database</a>
+    <span style="padding:6px 10px; border:1px solid #16a34a; border-radius:6px; color:#16a34a; font-weight:600;">Browse</span>
+    <a href="{{ route('databases.structure', [$domainModel->domain, $table]) }}" style="padding:6px 10px; border:1px solid #0ea5e9; border-radius:6px; text-decoration:none; color:#0ea5e9;">Structure</a>
 </div>
 
 @if(session('success'))
