@@ -111,52 +111,79 @@ body {
 /* ─────────────────────────────────────────────────────
    §5  SYNCED DATA TABLE
 ───────────────────────────────────────────────────── */
+/* TỔNG THỂ BẢNG */
 .dtable {
     width: 100%;
-    border-collapse: collapse;
+    border-collapse: separate; /* Đổi thành separate để bo góc hoạt động chuẩn */
     border-spacing: 0;
+    background: rgba(10, 18, 32, 0.5); /* Nền nhẹ cho bảng */
+    border: 1px solid var(--border-faint);
+    border-radius: 12px;
+    overflow: hidden; /* Để nội dung không tràn khỏi góc bo */
 }
 
-/* HEADER */
+/* HEADER - NỔI BẬT VỚI CHỮ CYAN */
 .dtable thead th {
     font-family: var(--font-mono) !important;
-    font-size: 10px;
+    font-size: 11px;
     text-transform: uppercase;
-    letter-spacing: .08em;
-    color: var(--text-secondary);
-    padding: 12px 15px;
-    background: rgba(255, 255, 255, 0.02);
-    border-bottom: 2px solid var(--border-faint);
+    letter-spacing: .1em;
+    color: #CCFFFF;
+    padding: 16px 15px;
+    background: rgba(15, 23, 42, 0.9);
+    border-bottom: 2px solid rgba(34, 211, 238, 0.2); /* Viền dưới màu cyan mờ */
     border-right: 1px solid var(--border-faint);
     text-align: left;
+    text-shadow: 0 0 8px rgba(34, 211, 238, 0.3); /* Hiệu ứng phát sáng nhẹ cho chữ */
 }
 
-/* ROW */
-.dtable tbody tr {
+/* CELL - NỘI DUNG */
+.dtable td {
+    padding: 14px 15px;
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--text-primary);
+    border-right: 1px solid var(--border-faint);
     border-bottom: 1px solid var(--border-faint);
-    transition: .15s;
+    transition: all 0.2s ease;
+}
+
+/* DÒNG & HIỆU ỨNG HOVER */
+.dtable tbody tr {
+    transition: all 0.2s ease;
+}
+
+.dtable tbody tr:last-child td {
+    border-bottom: none; /* Dòng cuối cùng không có viền dưới */
 }
 
 .dtable tbody tr:nth-child(even) {
-    background: rgba(255,255,255,0.01);
+    background: rgba(255, 255, 255, 0.015);
 }
 
 .dtable tbody tr:hover {
-    background: rgba(34,211,238,.04);
+    background: rgba(34, 211, 238, 0.04) !important;
+    backdrop-filter: blur(4px); /* Hiệu ứng kính mờ khi hover */
 }
 
-/* CELL */
-.dtable td {
-    padding: 12px 15px;
-    font-size: 13px;
-    color: var(--text-primary);
-    border-right: 1px solid var(--border-faint);
-}
-
-/* Cột cuối bỏ border */
+/* LOẠI BỎ VIỀN PHẢI CHO CỘT CUỐI */
 .dtable td:last-child,
 .dtable th:last-child {
     border-right: none;
+}
+
+/* ĐỊNH DẠNG LINK TRONG BẢNG */
+.dtable td a {
+    color: var(--cyan);
+    text-decoration: none;
+    font-family: var(--font-mono);
+    font-size: 12px;
+    transition: 0.2s;
+}
+
+.dtable td a:hover {
+    color: #fff;
+    text-shadow: 0 0 10px var(--cyan);
 }
 /* Status Badges */
 .badge {
