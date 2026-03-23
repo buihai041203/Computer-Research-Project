@@ -3,154 +3,150 @@
 @section('content')
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+
 <style>
 :root {
-    --surface-0: #060c17;
+    --surface-0: #050a14;
     --surface-1: #0a1220;
-    --border-faint: rgba(148,163,184,.07);
+    --surface-2: #161f32;
+    --border-faint: rgba(148, 163, 184, 0.08);
     --cyan: #22d3ee;
+    --cyan-glow: rgba(34, 211, 238, 0.3);
     --green: #4ade80;
     --red: #f87171;
-    --text-primary: #e2e8f0;
-    --text-secondary: #64748b;
+    --text-primary: #f1f5f9;
+    --text-secondary: #94a3b8;
     --font-ui: 'DM Sans', sans-serif;
     --font-mono: 'Space Mono', monospace;
-    --r-lg: 14px;
+    --r-lg: 16px;
 }
-.t-mono {
-    font-family: var(--font-mono);
+
+/* TỔNG THỂ ĐỒNG BỘ NỀN GRADIENT */
+html, body {
+    font-family: var(--font-ui);
+    background: radial-gradient(circle at top left, #0f172a, #050a14) !important;
+    color: var(--text-primary);
+    min-height: 100vh;
+    margin: 0;
 }
-/* CARD */
+
+.scc-wrap {
+    max-width: 1440px;
+    margin: 0 auto;
+    padding: 30px 24px;
+}
+
+/* TIÊU ĐỀ ĐỒNG BỘ VỚI VẠCH MÀU CYAN */
+.page-title {
+    font-size: 1.6rem;
+    font-weight: 700;
+    margin-bottom: 30px;
+    letter-spacing: -0.02em;
+    border-left: 4px solid var(--cyan);
+    padding-left: 15px;
+    text-shadow: 0 0 15px var(--cyan-glow);
+}
+
+/* CARD ĐỒNG BỘ HIỆU ỨNG ĐỔ BÓNG */
 .card {
     background: var(--surface-1);
     border: 1px solid var(--border-faint);
-    border-radius: 14px;
+    border-radius: var(--r-lg);
     overflow: hidden;
-    box-shadow: 0 10px 30px rgba(0,0,0,.35);
+    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.4);
 }
 
-/* TABLE */
+/* TABLE DÁNG CHUẨN */
 .dtable {
     width: 100%;
     border-collapse: separate;
     border-spacing: 0;
 }
 
-/* HEADER */
+/* HEADER BẢNG ĐỒNG BỘ */
 .dtable thead th {
     font-family: var(--font-mono);
-    font-size: 10px;
+    font-size: 11px;
     font-weight: 700;
-    letter-spacing: .1em;
-    color: var(--text-secondary);
-    padding: 12px 16px;
-    background: rgba(255,255,255,0.02);
-    border-bottom: 1px solid var(--border-faint);
-}
-
-/* ROW */
-.dtable tbody tr {
-    border-bottom: 1px solid var(--border-faint);
-    transition: 0.2s;
-}
-
-/* ZEBRA */
-.dtable tbody tr:nth-child(even) {
-    background: rgba(255,255,255,0.01);
-}
-
-/* HOVER */
-.dtable tbody tr:hover {
-    background: rgba(34,211,238,.04);
-}
-
-/* CELL */
-.dtable td {
-    padding: 12px 16px;
-    font-size: 13px;
-    font-weight: 500;
-    color: var(--text-primary);
-}
-/* VERTICAL LINES (QUAN TRỌNG) */
-.dtable th,
-.dtable td {
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    color: var(--cyan);
+    padding: 16px;
+    background: rgba(15, 23, 42, 0.9);
+    border-bottom: 2px solid rgba(34, 211, 238, 0.1);
     border-right: 1px solid var(--border-faint);
 }
 
-.dtable th:last-child,
-.dtable td:last-child {
+/* DÒNG & HOVER */
+.dtable tbody tr {
+    transition: all 0.2s ease;
+}
+
+.dtable tbody tr:nth-child(even) {
+    background: rgba(255, 255, 255, 0.01);
+}
+
+.dtable tbody tr:hover {
+    background: rgba(34, 211, 238, 0.04) !important;
+    backdrop-filter: blur(4px);
+}
+
+.dtable td {
+    padding: 14px 16px;
+    font-size: 14px;
+    border-bottom: 1px solid var(--border-faint);
+    border-right: 1px solid rgba(255, 255, 255, 0.02);
+}
+
+.dtable td:last-child, .dtable th:last-child {
     border-right: none;
 }
 
-/* BO GÓC CHUẨN */
-.dtable thead th:first-child {
-    border-top-left-radius: 14px;
-}
-.dtable thead th:last-child {
-    border-top-right-radius: 14px;
-}
-.dtable th,
-.dtable td {
-    text-align: left !important;
-}
-.dtable td:last-child {
-    text-align: left !important;
-}
-
-/* STATUS BADGE */
+/* BADGE PHÁT SÁNG */
 .badge {
-    padding: 2px 8px;
-    border-radius: 4px;
+    padding: 4px 10px;
+    border-radius: 6px;
     font-family: var(--font-mono);
     font-size: 10px;
     font-weight: 700;
+    text-shadow: 0 0 5px currentColor;
 }
 
 .badge--on {
-    background: rgba(74,222,128,.1);
+    background: rgba(74, 222, 128, 0.1);
     color: var(--green);
-    border: 1px solid rgba(74,222,128,.2);
+    border: 1px solid rgba(74, 222, 128, 0.2);
 }
 
 .badge--off {
-    background: rgba(248,113,113,.1);
+    background: rgba(248, 113, 113, 0.1);
     color: var(--red);
-    border: 1px solid rgba(248,113,113,.2);
+    border: 1px solid rgba(248, 113, 113, 0.2);
 }
 
-/* ACTION BUTTON */
+/* NÚT BẤM NEON */
 .btn-open {
-    padding: 4px 10px;
-    border-radius: var(--r-sm);
+    padding: 6px 14px;
+    border-radius: 8px;
     font-family: var(--font-mono);
-    font-size: 10px;
+    font-size: 11px;
     font-weight: 700;
-    background: rgba(34,211,238,.1);
-    color: var(--cyan);
-    border: 1px solid rgba(34,211,238,.25);
+    background: var(--cyan);
+    color: #000;
+    border: none;
+    transition: all 0.2s;
     text-decoration: none;
+    display: inline-block;
+    box-shadow: 0 0 10px var(--cyan-glow);
 }
 
 .btn-open:hover {
-    background: rgba(34,211,238,.2);
+    background: #fff;
+    box-shadow: 0 0 20px rgba(255, 255, 255, 0.5);
+    transform: translateY(-2px);
 }
 
-/* PAGE TITLE */
-.page-title {
-    font-size: 1.4rem;
-    font-weight: 600;
-    margin-bottom: 20px;
-}
-html, body {
-    font-family: var(--font-ui);
-    background: var(--surface-0);
-    color: var(--text-primary);
-}
-.scc-wrap {
-    max-width: 1440px;
-    margin: 0 auto;
-    padding: 24px;
-}
+.t-mono { font-family: var(--cyan); font-size: 13px; }
 </style>
 
 <div class="scc-wrap">
@@ -158,11 +154,15 @@ html, body {
     <h1 class="page-title">Databases</h1>
 
     @if(session('success'))
-        <div style="color:var(--green); margin-bottom:10px;">{{ session('success') }}</div>
+        <div style="color:var(--green); background:rgba(74,222,128,0.1); padding:10px; border-radius:6px; margin-bottom:15px; font-family:var(--font-mono); font-size:12px;">
+            {{ session('success') }}
+        </div>
     @endif
 
     @if(session('error'))
-        <div style="color:var(--red); margin-bottom:10px;">{{ session('error') }}</div>
+        <div style="color:var(--red); background:rgba(248,113,113,0.1); padding:10px; border-radius:6px; margin-bottom:15px; font-family:var(--font-mono); font-size:12px;">
+            {{ session('error') }}
+        </div>
     @endif
 
     <div class="card">
@@ -173,33 +173,33 @@ html, body {
                     <th>DB NAME</th>
                     <th>HOST</th>
                     <th>PORT</th>
-                    <th>STATUS</th>
-                    <th>ACTION</th>
+                    <th style=>STATUS</th>
+                    <th style=>ACTION</th>
                 </tr>
             </thead>
             <tbody>
             @forelse($domains as $d)
                 @php $cfg = $d->databaseConfig; @endphp
                 <tr>
-                    <td>{{ $d->domain }}</td>
-                    <td style="font-family: var(--font-mono);">{{ $cfg->db_name ?? 'chưa cấu hình' }}</td>
-                    <td>{{ $cfg->db_host ?? '-' }}</td>
+                    <td style="font-weight: 600;">{{ $d->domain }}</td>
+                    <td class="t-mono">{{ $cfg->db_name ?? 'NOT CONFIGURED' }}</td>
+                    <td class="t-mono" style="color: var(--text-secondary);">{{ $cfg->db_host ?? '-' }}</td>
                     <td class="t-mono">{{ $cfg->db_port ?? '-' }}</td>
-                    <td>
+                    <td style="text-align: left;">
                         @if($cfg && $cfg->is_active)
                             <span class="badge badge--on">ON</span>
                         @else
                             <span class="badge badge--off">OFF</span>
                         @endif
                     </td>
-                    <td>
+                    <td style="text-align: left;">
                         <a href="{{ route('databases.show', $d->domain) }}" class="btn-open">Open</a>
                     </td>
                 </tr>
             @empty
                 <tr>
-                    <td colspan="6" style="text-align:center; padding:30px; font-family:var(--font-mono); color:var(--text-secondary)">
-                        // NO WEBSITE FOUND
+                    <td colspan="6" style="text-align:center; padding:40px; font-family:var(--font-mono); color:var(--text-secondary)">
+                        // NO DATABASES FOUND
                     </td>
                 </tr>
             @endforelse

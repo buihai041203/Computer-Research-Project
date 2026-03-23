@@ -151,57 +151,68 @@ html, body {
 }
 
 /* ─────────────────────────────────────────────────────
-   §5  TABLE SYNC (dtable style)
+    §5  TABLE SYNC (dtable style - Upgraded)
 ───────────────────────────────────────────────────── */
-/* TABLE STYLE giống System Logs */
 .dtable {
     width: 100%;
     border-collapse: separate; 
     border-spacing: 0;
+    /* Thêm bo góc nhẹ cho bảng */
+    border: 1px solid var(--border-faint);
+    border-radius: 12px;
+    overflow: hidden;
 }
 
-/* Header */
+/* Header - Đổi sang màu Cyan và thêm hiệu ứng phát sáng */
 .dtable thead th {
     font-family: var(--font-mono);
     font-size: 10px;
     text-transform: uppercase;
-    letter-spacing: .08em;
-    color: var(--text-secondary);
-    padding: 12px 15px;
-    background: rgba(255,255,255,0.02);
-    border-bottom: 2px solid var(--border-faint);
+    letter-spacing: .1em;
+    color: #CCFFFF; /* Đổi từ text-secondary sang cyan */
+    padding: 16px 15px;
+    background: rgba(15, 23, 42, 0.9); /* Làm nền header đậm hơn */
+    border-bottom: 2px solid rgba(34, 211, 238, 0.15); /* Viền dưới màu cyan mờ */
     border-right: 1px solid var(--border-faint);
     text-align: left;
+    text-shadow: 0 0 8px rgba(34, 211, 238, 0.3);
 }
 
 /* Row */
 .dtable tbody tr {
-    border-bottom: 1px solid var(--border-faint);
-    transition: .15s;
+    transition: all 0.2s var(--ease);
 }
 
-/* Zebra rows */
+/* Zebra rows - Tăng độ đậm một chút để dễ phân biệt */
 .dtable tbody tr:nth-child(even) {
-    background: rgba(255,255,255,0.01);
+    background: rgba(255, 255, 255, 0.02);
 }
 
-/* Hover */
+/* Hover - Hiệu ứng kính mờ (glassmorphism) */
 .dtable tbody tr:hover {
-    background: rgba(34,211,238,.04);
+    background: rgba(34, 211, 238, 0.06) !important;
+    backdrop-filter: blur(4px);
 }
 
 /* Cell */
 .dtable td {
-    padding: 12px 15px;
+    padding: 14px 15px; /* Tăng padding cho thoáng */
     font-size: 13px;
+    font-weight: 500;
     color: var(--text-primary);
     border-right: 1px solid var(--border-faint);
+    border-bottom: 1px solid var(--border-faint);
 }
 
-/* Remove last border */
+/* Cột cuối bỏ border */
 .dtable td:last-child,
 .dtable th:last-child {
     border-right: none;
+}
+
+/* Dòng cuối cùng bỏ border bottom để không bị đè lên bo góc của Card */
+.dtable tbody tr:last-child td {
+    border-bottom: none;
 }
 .card {
     background: var(--surface-1);

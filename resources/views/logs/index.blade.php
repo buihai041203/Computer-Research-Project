@@ -56,7 +56,7 @@ thead th {
     font-size: 10px;
     text-transform: uppercase;
     letter-spacing: .08em;
-    color: var(--text-secondary);
+    color: #CCFFFF;
     padding: 12px 15px;
     background: rgba(255, 255, 255, 0.02);
     border-bottom: 2px solid var(--border-faint);
