@@ -59,6 +59,9 @@ body {
     padding: 24px;
     margin-bottom: 24px;
     box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
 }
 
 .section-title {
@@ -212,22 +215,42 @@ input:focus, textarea:focus {
     <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 24px;">
         <div class="db-card">
             <h3 class="section-title">Import SQL</h3>
-            <form method="POST" action="{{ route('databases.import', $domainModel->domain) }}" enctype="multipart/form-data">
-                @csrf
+            {{-- <form method="POST" action="{{ route('databases.import', $domainModel->domain) }}" enctype="multipart/form-data">
+                
                 <div style="display:flex; flex-direction:column; gap:15px;">
-                    <input type="file" name="sql_file" accept=".sql,.txt" required style="width:100%">
+                    <input type="file" >
                     <button type="submit" class="btn btn-primary" style="width:100%">START IMPORT</button>
                 </div>
-            </form>
+            </form> --}}
+            <form ... style="height:100%; display:flex; flex-direction:column;">
+                @csrf
+    <div style="flex:1; display:flex; flex-direction:column; gap:15px;">
+        <input type="file" name="sql_file" accept=".sql,.txt" required style="width:100%">
+    </div>
+
+    <button type="submit" class="btn btn-primary" style="width:100%">
+        START IMPORT
+    </button>
+</form>
         </div>
 
         <div class="db-card">
             <h3 class="section-title">SQL Console</h3>
-            <form method="POST" action="{{ route('databases.query', $domainModel->domain) }}">
-                @csrf
-                <textarea name="sql" rows="3" style="width:100%; margin-bottom:15px; resize:none;" placeholder="SELECT * FROM users LIMIT 10;">{{ old('sql') }}</textarea>
+            {{-- <form method="POST" action="{{ route('databases.query', $domainModel->domain) }}">
+               
+                
                 <button type="submit" class="btn btn-primary" style="width:100%">EXECUTE QUERY</button>
-            </form>
+            </form> --}}
+            <form ... style="height:100%; display:flex; flex-direction:column;">
+    <div style="flex:1;">
+         @csrf
+        <textarea name="sql" rows="3" style="width:100%; margin-bottom:15px; resize:none;" placeholder="SELECT * FROM users LIMIT 10;">{{ old('sql') }}</textarea>
+    </div>
+
+    <button type="submit" class="btn btn-primary" style="width:100%">
+        EXECUTE QUERY
+    </button>
+</form>
         </div>
     </div>
 

@@ -42,8 +42,8 @@ html, body {
     font-weight: 700;
     margin-bottom: 30px;
     letter-spacing: -0.02em;
-    border-left: 4px solid var(--cyan);
-    padding-left: 15px;
+    /* border-left: 4px solid var(--cyan); */
+    padding-left: 0px;
     text-shadow: 0 0 15px var(--cyan-glow);
 }
 
@@ -70,11 +70,12 @@ html, body {
     font-weight: 700;
     text-transform: uppercase;
     letter-spacing: 0.12em;
-    color: var(--cyan);
+    color: #CCFFFF;
     padding: 16px;
     background: rgba(15, 23, 42, 0.9);
     border-bottom: 2px solid rgba(34, 211, 238, 0.1);
     border-right: 1px solid var(--border-faint);
+    text-align: left;
 }
 
 /* DÒNG & HOVER */
