@@ -10,6 +10,14 @@ class BlockedIP extends Model
 
     protected $fillable = [
         'ip',
+        'scope_type',
+        'scope_value',
         'reason',
+        'expires_at',
+        'source',
+    ];
+
+    protected $casts = [
+        'expires_at' => 'datetime',
     ];
 }
