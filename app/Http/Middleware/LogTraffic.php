@@ -35,17 +35,32 @@ class LogTraffic
             return $next($request);
         }
 
-        // Never block local/system/whitelisted IPs
         if ($this->isSystemIp($ip)) {
             return $next($request);
         }
 
-        // Bị block thì chặn ở lớp ứng dụng (áp cho sites)
-        if (BlockedIP::where('ip', $ip)->exists()) {
+        $host = $request->getHost();
+        $domainId = Domain::query()->where('domain', $host)->value('id');
+
+        // Block scope-aware: global OR current domain
+        $isBlocked = BlockedIP::query()
+            ->where('ip', $ip)
+            ->where(function ($q) use ($domainId) {
+                $q->where('scope_type', 'global')
+                    ->orWhere(function ($dq) use ($domainId) {
+                        $dq->where('scope_type', 'domain')
+                           ->where('scope_value', $domainId ?: -1);
+                    });
+            })
+            ->where(function ($q) {
+                $q->whereNull('expires_at')->orWhere('expires_at', '>', now());
+            })
+            ->exists();
+
+        if ($isBlocked) {
             abort(403, 'Your IP has been blocked');
         }
 
-        // Bỏ qua request không cần track để tránh spam
         if (
             $request->method() !== 'GET' ||
             !$request->acceptsHtml() ||
@@ -54,20 +69,19 @@ class LogTraffic
             return $next($request);
         }
 
-        $domain = $request->getHost();
+        $domain = $host;
 
         $domainModel = Domain::where('domain', $domain)
             ->where('is_active', true)
             ->first();
 
         if (!$domainModel) {
-            return $next($request); // host không nằm trong danh sách quản lý
+            return $next($request);
         }
 
         $agent = $request->userAgent() ?? 'unknown';
         $type = str_contains(strtolower($agent), 'bot') ? 'bot' : 'human';
 
-        // Dedupe trong 10 giây cho cùng IP + UA + domain
         $duplicated = TrafficLog::query()
             ->where('ip', $ip)
             ->where('domain', $domain)
@@ -113,8 +127,16 @@ class LogTraffic
         $threshold = (int) env('TRAFFIC_BLOCK_THRESHOLD', 120);
         if ($requests > $threshold) {
             BlockedIP::firstOrCreate(
-                ['ip' => $ip],
-                ['reason' => 'Spam requests (' . $requests . '/min)']
+                [
+                    'ip' => $ip,
+                    'scope_type' => 'global',
+                    'scope_value' => null,
+                ],
+                [
+                    'reason' => 'Spam requests (' . $requests . '/min)',
+                    'source' => 'auto',
+                    'expires_at' => now()->addMinutes((int) env('AUTO_UNBLOCK_MINUTES', 30)),
+                ]
             );
 
             $this->sendTelegramOnce(
@@ -141,7 +163,6 @@ class LogTraffic
             return true;
         }
 
-        // private ranges + server public IPs (from env)
         if (!filter_var($ip, FILTER_VALIDATE_IP, FILTER_FLAG_NO_PRIV_RANGE | FILTER_FLAG_NO_RES_RANGE)) {
             return true;
         }
