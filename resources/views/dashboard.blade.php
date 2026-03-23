@@ -117,6 +117,9 @@ body {
 
 .card__body { padding: 20px; }
 .card__body--flush { padding: 0; }
+.card__body {
+    height: 100%;
+}
 
 /* ─────────────────────────────────────────────────────
    §5  TYPOGRAPHY SCALE
@@ -521,11 +524,14 @@ body {
 }
 .g-traffic-custom {
     display: grid;
-    grid-template-columns: 2fr 1fr;
+    grid-template-columns: 2fr 1fr; 
     gap: 16px;
-    margin-bottom: 16px;
+    align-items: stretch; 
 }
 
+.g-traffic-custom > div:first-child .card {
+    height: 100%;
+}
 .g-traffic-right {
     display: grid;
     grid-template-rows: 1fr 1fr;
@@ -662,7 +668,7 @@ body {
                     </div>
                 </div>
                 <div class="card__body">
-                    <div id="js-traffic-chart" style="height:260px"></div>
+                    <div id="js-traffic-chart" style="height:100%"></div>
                 </div>
             </div>
         </div>
