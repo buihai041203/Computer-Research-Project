@@ -75,7 +75,7 @@ html, body {
     font-size: 10px;
     font-weight: 700;
     letter-spacing: .1em;
-    color: var(--text-secondary);
+    color: #CCFFFF;
     padding: 12px 16px;
     background: rgba(255,255,255,0.02);
     border-bottom: 1px solid var(--border-faint);

@@ -61,72 +61,83 @@ body {
     overflow: hidden;
     box-shadow: 0 10px 30px rgba(0,0,0,.35);
 }
+/* ─────────────────────────────────────────────────────
+    TABLE SYNC (Security Red Theme)
+───────────────────────────────────────────────────── */
 .dtable {
     width: 100%;
     border-collapse: separate;
     border-spacing: 0;
+    background: rgba(10, 18, 32, 0.5);
 }
 
-/* HEADER */
+/* HEADER - Nhấn mạnh tông đỏ cảnh báo */
 .dtable thead th {
-    font-family: var(--font-mono);
-    font-size: 10px;
-    font-weight: 700;
+    font-family: var(--font-mono) !important;
+    font-size: 11px;
+    text-transform: uppercase;
     letter-spacing: .1em;
-    color: var(--text-secondary);
-    padding: 12px 16px;
-    background: rgba(255,255,255,0.02);
-    border-bottom: 1px solid var(--border-faint);
+    color: #CCFFFF; /* Đổi sang đỏ để đồng bộ security */
+    padding: 16px 15px;
+    background: rgba(15, 23, 42, 0.9);
+    border-bottom: 2px solid rgba(248, 113, 113, 0.2); 
+    border-right: 1px solid var(--border-faint);
+    text-align: left;
+    text-shadow: 0 0 8px rgba(248, 113, 113, 0.3);
 }
 
 /* ROW */
 .dtable tbody tr {
-    border-bottom: 1px solid var(--border-faint);
-    transition: 0.2s;
+    transition: all 0.2s ease;
 }
 
-/* ZEBRA */
 .dtable tbody tr:nth-child(even) {
-    background: rgba(255,255,255,0.01);
+    background: rgba(255, 255, 255, 0.015);
 }
 
-/* HOVER */
+/* HOVER - Hiệu ứng kính mờ đỏ nhẹ */
 .dtable tbody tr:hover {
-    background: rgba(34,211,238,.04);
+    background: rgba(248, 113, 113, 0.04) !important;
+    backdrop-filter: blur(4px);
 }
 
 /* CELL */
 .dtable td {
-    padding: 12px 16px;
+    padding: 14px 15px;
     font-size: 13px;
     font-weight: 500;
     color: var(--text-primary);
-}
-/* VERTICAL LINES (QUAN TRỌNG) */
-.dtable th,
-.dtable td {
     border-right: 1px solid var(--border-faint);
+    border-bottom: 1px solid var(--border-faint);
 }
 
-.dtable th:last-child,
-.dtable td:last-child {
+/* Bỏ viền dòng cuối và cột cuối */
+.dtable tbody tr:last-child td {
+    border-bottom: none;
+}
+
+.dtable td:last-child,
+.dtable th:last-child {
     border-right: none;
 }
 
-/* BO GÓC CHUẨN */
-.dtable thead th:first-child {
-    border-top-left-radius: 14px;
+/* TYPE BADGE - Làm nổi bật loại sự kiện */
+.badge-danger {
+    background: rgba(248, 113, 113, 0.1);
+    color: var(--red);
+    padding: 4px 10px;
+    border-radius: 6px;
+    font-family: var(--font-mono);
+    font-size: 10px;
+    font-weight: 700;
+    border: 1px solid rgba(248, 113, 113, 0.2);
+    display: inline-block;
+    text-shadow: 0 0 5px var(--red);
 }
-.dtable thead th:last-child {
-    border-top-right-radius: 14px;
-}
-.dtable th,
-.dtable td {
-    text-align: left !important;
-}
-.dtable td:last-child {
-    text-align: left !important;
-}
+
+/* Bo góc cho bảng */
+.dtable thead th:first-child { border-top-left-radius: 14px; }
+.dtable thead th:last-child { border-top-right-radius: 14px; }
 
 /* MONO */
 .t-mono {
