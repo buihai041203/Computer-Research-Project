@@ -34,15 +34,25 @@ class User extends Authenticatable
     ];
 
     /**
-     * Get the attributes that should be cast.
+     * The attributes that should be cast.
      *
-     * @return array<string, string>
+     * @var array<string,string>
      */
-    protected function casts(): array
+    protected $casts = [
+        'email_verified_at' => 'datetime',
+        'password' => 'hashed',
+    ];
+
+    /**
+     * Automatically hash password values when set.
+     */
+    public function setPasswordAttribute(string $value): void
     {
-        return [
-            'email_verified_at' => 'datetime',
-            'password' => 'hashed',
-        ];
+        if (\Illuminate\Support\Facades\Hash::needsRehash($value)) {
+            $value = \Illuminate\Support\Facades\Hash::make($value);
+        }
+
+        $this->attributes['password'] = $value;
     }
 }
+
