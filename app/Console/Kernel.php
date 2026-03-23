@@ -10,10 +10,14 @@ class Kernel extends ConsoleKernel
 
     protected function schedule(Schedule $schedule)
     {
-        // Task chạy tự động
+        // Dọn log cũ
+        $schedule->command('app:cleanup-logs')->dailyAt('02:00');
 
-        $schedule->command('logs:cleanup')->daily();
+        // Backup DB mỗi ngày
+        $schedule->command('backup:database')->dailyAt('02:30');
 
+        // Gỡ block tự động đã hết hạn
+        $schedule->command('firewall:cleanup-auto-blocks')->everyTenMinutes();
     }
 
     protected function commands()

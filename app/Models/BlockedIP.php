@@ -6,5 +6,18 @@ use Illuminate\Database\Eloquent\Model;
 
 class BlockedIP extends Model
 {
-    //
+    protected $table = 'blocked_ips';
+
+    protected $fillable = [
+        'ip',
+        'scope_type',
+        'scope_value',
+        'reason',
+        'expires_at',
+        'source',
+    ];
+
+    protected $casts = [
+        'expires_at' => 'datetime',
+    ];
 }

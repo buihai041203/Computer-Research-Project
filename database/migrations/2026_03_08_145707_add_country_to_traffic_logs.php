@@ -12,7 +12,9 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('traffic_logs', function (Blueprint $table) {
-            //
+            if (!Schema::hasColumn('traffic_logs', 'country')) {
+                $table->string('country')->nullable()->after('ip');
+            }
         });
     }
 
@@ -22,7 +24,9 @@ return new class extends Migration
     public function down(): void
     {
         Schema::table('traffic_logs', function (Blueprint $table) {
-            $table->string('country')->nullable();
+            if (Schema::hasColumn('traffic_logs', 'country')) {
+                $table->dropColumn('country');
+            }
         });
     }
 };

@@ -63,6 +63,7 @@
     --dur: 180ms;
 }
 
+
 /* ─────────────────────────────────────────────────────
    §2  RESET + BASE
 ───────────────────────────────────────────────────── */
@@ -88,7 +89,7 @@ body {
 /* 8-pt spacing grid */
 .g-3  { display: grid; grid-template-columns: repeat(3,1fr); gap: 16px; margin-bottom: 16px; }
 .g-2  { display: grid; grid-template-columns: repeat(2,1fr); gap: 16px; margin-bottom: 16px; }
-.g-41 { display: grid; grid-template-columns: 5fr 3fr; gap: 16px; margin-bottom: 16px; }
+.g-41 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 16px; }
 .g-1  { margin-bottom: 16px; }
 
 /* ─────────────────────────────────────────────────────
@@ -116,6 +117,9 @@ body {
 
 .card__body { padding: 20px; }
 .card__body--flush { padding: 0; }
+.card__body {
+    height: 100%;
+}
 
 /* ─────────────────────────────────────────────────────
    §5  TYPOGRAPHY SCALE
@@ -284,32 +288,58 @@ body {
 .dtable {
     width: 100%;
     border-collapse: collapse;
+    border-spacing: 0;
 }
+
+/* HEADER kiểu Excel */
 .dtable thead th {
     font-family: var(--font-mono);
-    font-size: 9px;
-    font-weight: 700;
-    letter-spacing: .1em;
+    font-size: 10px;
     text-transform: uppercase;
-    color: var(--text-muted);
-    padding: 0 16px 10px;
+    letter-spacing: .08em;
+    color: #CCFFFF;
+    padding: 12px 15px;
+    background: rgba(255,255,255,0.02);
+    border-bottom: 2px solid var(--border-faint);
+    border-right: 1px solid var(--border-faint);
     text-align: left;
-    border-bottom: 1px solid var(--border-faint);
 }
+
+/* ROW */
 .dtable tbody tr {
     border-bottom: 1px solid var(--border-faint);
-    transition: background var(--dur) var(--ease);
+    transition: .15s;
 }
-.dtable tbody tr:last-child { border-bottom: none; }
-.dtable tbody tr:hover { background: rgba(34,211,238,.025); }
-.dtable tbody td {
-    padding: 11px 16px;
+
+/* ZEBRA */
+.dtable tbody tr:nth-child(even) {
+    background: rgba(255,255,255,0.01);
+}
+
+/* HOVER */
+.dtable tbody tr:hover {
+    background: rgba(34,211,238,.04);
+}
+
+/* CELL */
+.dtable td {
+    padding: 12px 15px;
     font-size: 13px;
-    vertical-align: middle;
+    color: var(--text-primary);
+    border-right: 1px solid var(--border-faint);
 }
+
+/* BỎ border cột cuối */
+.dtable td:last-child,
+.dtable th:last-child {
+    border-right: none;
+}
+
+/* MONO COLUMNS (IP / time giống log) */
 .dtable .td-mono {
     font-family: var(--font-mono);
     font-size: 11px;
+    color: var(--cyan);
 }
 
 /* Empty state */
@@ -492,6 +522,33 @@ body {
     .g-3, .g-2 { grid-template-columns: 1fr; }
     .page-header { flex-direction: column; align-items: flex-start; gap: 12px; }
 }
+.g-traffic-custom {
+    display: grid;
+    grid-template-columns: 2fr 1fr; 
+    gap: 16px;
+    align-items: stretch; 
+}
+
+.g-traffic-custom > div:first-child .card {
+    height: 100%;
+}
+.g-traffic-right {
+    display: grid;
+    grid-template-rows: 1fr 1fr;
+    gap: 16px;
+}
+.table-scroll {
+    max-height: 260px; 
+    overflow-y: auto;
+}
+
+/* responsive */
+@media (max-width: 1100px) {
+    .g-traffic-custom {
+        grid-template-columns: 1fr;
+    }
+}
+
 </style>
 
 {{-- ═══════════════════════════════════════
@@ -597,76 +654,89 @@ body {
 
 </div>
 
-{{-- ── TRAFFIC CHART ─────────────────────── --}}
-<div class="g-1" role="region" aria-label="Traffic timeline">
-    <div class="card">
-        <div class="card__header">
-            <span class="t-section">Traffic Timeline</span>
-            <div style="display:flex;align-items:center;gap:14px;font-family:var(--font-mono);font-size:10px;color:var(--text-secondary)">
-                <span><span style="color:var(--green)">◆</span> Human</span>
-                <span><span style="color:var(--red)">◆</span> Bot</span>
+<div class="g-traffic-custom">
+
+    {{-- LEFT: TRAFFIC --}}
+    <div>
+        <div class="g-1" role="region" aria-label="Traffic timeline">
+            <div class="card">
+                <div class="card__header">
+                    <span class="t-section">Traffic Timeline</span>
+                    <div style="display:flex;align-items:center;gap:14px;font-family:var(--font-mono);font-size:10px;color:var(--text-secondary)">
+                        <span><span style="color:var(--green)">◆</span> Human</span>
+                        <span><span style="color:var(--red)">◆</span> Bot</span>
+                    </div>
+                </div>
+                <div class="card__body">
+                    <div id="js-traffic-chart" style="height:100%"></div>
+                </div>
             </div>
         </div>
-        <div class="card__body">
-            <div id="js-traffic-chart" style="height:260px"></div>
-        </div>
     </div>
+
+    {{-- RIGHT: 2 TABLE --}}
+    <div class="g-traffic-right">
+
+        {{-- TOP IP --}}
+        <div>
+            <div class="card">
+                <div class="card__header">
+                    <span class="t-section">Top Attacker IPs</span>
+                    <span class="t-label" style="color:var(--red)">High Risk</span>
+                </div>
+                <div class="card__body--flush table-scroll">
+                    <table class="dtable" aria-label="Top attacker IP addresses">
+                        <thead>
+                            <tr>
+                                <th style="width:36px">#</th>
+                                <th>IP Address</th>
+                                <th>Requests</th>
+                            </tr>
+                        </thead>
+                        <tbody id="js-top-ips">
+                            <tr><td class="empty-cell" colspan="3">Loading…</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        {{-- TOP COUNTRIES --}}
+        <div>
+            <div class="card">
+                <div class="card__header">
+                    <span class="t-section">Top Countries</span>
+                    <span class="t-label">Geo Distribution</span>
+                </div>
+                <div class="card__body--flush table-scroll">
+                    <table class="dtable" aria-label="Top countries by visitor count">
+                        <thead>
+                            <tr>
+                                <th style="width:36px">#</th>
+                                <th>Country</th>
+                                <th>Visitors</th>
+                            </tr>
+                        </thead>
+                        <tbody id="js-countries">
+                            <tr><td class="empty-cell" colspan="3">Loading…</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
 </div>
 
-{{-- ── TOP IPs + TOP COUNTRIES ───────────── --}}
-<div class="g-2" role="region" aria-label="Geolocation data">
+<div class="g-41" role="region" aria-label="Attack map and latest visitors">
 
-    <div class="card">
-        <div class="card__header">
-            <span class="t-section">Top Attacker IPs</span>
-            <span class="t-label" style="color:var(--red)">High Risk</span>
-        </div>
-        <div class="card__body--flush">
-            <table class="dtable" aria-label="Top attacker IP addresses">
-                <thead>
-                    <tr>
-                        <th style="width:36px">#</th>
-                        <th>IP Address</th>
-                        <th>Requests</th>
-                    </tr>
-                </thead>
-                <tbody id="js-top-ips">
-                    <tr><td class="empty-cell" colspan="3">Loading…</td></tr>
-                </tbody>
-            </table>
-        </div>
-    </div>
-
-    <div class="card">
-        <div class="card__header">
-            <span class="t-section">Top Countries</span>
-            <span class="t-label">Geo Distribution</span>
-        </div>
-        <div class="card__body--flush">
-            <table class="dtable" aria-label="Top countries by visitor count">
-                <thead>
-                    <tr>
-                        <th style="width:36px">#</th>
-                        <th>Country</th>
-                        <th>Visitors</th>
-                    </tr>
-                </thead>
-                <tbody id="js-countries">
-                    <tr><td class="empty-cell" colspan="3">Loading…</td></tr>
-                </tbody>
-            </table>
-        </div>
-    </div>
-
-</div>
-
-{{-- ── ATTACK MAP ────────────────────────── --}}
-<div class="g-1" role="region" aria-label="Live attack map">
+    {{-- LEFT: MAP --}}
     <div class="card">
         <div class="card__header">
             <span class="t-section">Live Attack Map</span>
             <div class="live">
-                <span class="live__dot" aria-hidden="true"></span>
+                <span class="live__dot"></span>
                 <span class="t-label" style="color:var(--green)">Real-time</span>
             </div>
         </div>
@@ -674,10 +744,8 @@ body {
             <div id="attackMap" aria-label="World map showing attack origins"></div>
         </div>
     </div>
-</div>
 
-{{-- ── LATEST VISITORS ───────────────────── --}}
-<div class="g-1" role="region" aria-label="Latest visitors">
+    {{-- RIGHT: LATEST VISITORS --}}
     <div class="card">
         <div class="card__header">
             <span class="t-section">Latest Visitors</span>
@@ -688,10 +756,8 @@ body {
                 <thead>
                     <tr>
                         <th>IP Address</th>
-                        <th>Country</th>
                         <th>Type</th>
                         <th>Threat</th>
-                        <th>Timestamp</th>
                         <th>Action</th>
                     </tr>
                 </thead>
@@ -699,39 +765,39 @@ body {
                 @forelse($latestVisitors as $v)
                 <tr>
                     <td class="td-mono">{{ $v->ip }}</td>
-                    <td class="t-dim" style="font-size:13px">{{ $v->country }}</td>
+
                     <td>
-                        @if($v->is_bot)
+                        @if(($v->type ?? 'human') === 'bot' || ($v->is_bot ?? false))
                             <span class="badge badge--bot">⚠ Bot</span>
                         @else
                             <span class="badge badge--human">✓ Human</span>
                         @endif
                     </td>
+
                     <td>
                         @php
                             $lvl = in_array($v->threat, ['CRITICAL','HIGH','MEDIUM','LOW']) ? $v->threat : 'LOW';
                         @endphp
                         <span class="threat threat--{{ $lvl }}">{{ $lvl }}</span>
                     </td>
-                    <td class="td-mono t-dim" style="font-size:10px">{{ $v->created_at }}</td>
+
                     <td>
                         <button class="btn-block"
                                 data-ip="{{ $v->ip }}"
-                                onclick="Actions.blockIp(this)"
-                                aria-label="Block IP {{ $v->ip }}">
+                                onclick="Actions.blockIp(this)">
                             ✕ Block
                         </button>
                     </td>
                 </tr>
                 @empty
-                <tr><td class="empty-cell" colspan="6">No visitor records found</td></tr>
+                <tr><td class="empty-cell" colspan="4">No visitor records</td></tr>
                 @endforelse
                 </tbody>
             </table>
         </div>
     </div>
-</div>
 
+</div>
 {{-- ── LIVE SECURITY EVENTS ──────────────── --}}
 <div class="g-1" role="region" aria-label="Live security events">
     <div class="card">
@@ -1188,7 +1254,7 @@ const Actions = {
         btn.textContent = '…';
 
         try {
-            const data = await API.post('/api/firewall/block', { ip });
+            const data = await API.post('/firewall/block', { ip });
             Toast.show(data.message ?? `${ip} has been blocked.`, 'success');
             btn.closest('tr')?.remove();
         } catch (err) {

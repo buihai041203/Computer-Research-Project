@@ -2,144 +2,199 @@
 
 namespace App\Http\Middleware;
 
-use Closure;
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Http;
+use App\Models\BlockedIP;
+use App\Models\Domain;
 use App\Models\TrafficLog;
 use App\Services\SecurityDetector;
-use Illuminate\Support\Facades\Cache;
-use App\Models\BlockedIP;
 use App\Services\ThreatAnalyzer;
-use App\Models\Domain;
-use Illuminate\Support\Str;
+use Closure;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Http;
 
 class LogTraffic
 {
-
     public function handle(Request $request, Closure $next)
     {
         $ip = $request->ip();
 
-        if(BlockedIP::where('ip',$ip)->exists()){
-            abort(403,"Your IP has been blocked");
+        // Panel routes luôn được đi qua để tránh tự khóa admin
+        if (
+            $request->is('dashboard*') ||
+            $request->is('api/*') ||
+            $request->is('domains*') ||
+            $request->is('login') ||
+            $request->is('register') ||
+            $request->is('profile*') ||
+            $request->is('firewall*') ||
+            $request->is('logs*') ||
+            $request->is('traffic*') ||
+            $request->is('security*') ||
+            $request->is('databases*')
+        ) {
+            return $next($request);
         }
 
-        $ip = $request->ip();
-
-        $domain = $request->getHost();
-
-        $domainModel = Domain::firstOrCreate(
-            ['domain' => $domain],
-            ['agent_key' => Str::uuid()]
-        );
-
-        $agent = $request->userAgent();
-
-        $type = 'human';
-
-        if(str_contains(strtolower($agent), 'bot')){
-            $type = 'bot';
+        if ($this->isSystemIp($ip)) {
+            return $next($request);
         }
 
-        // LẤY COUNTRY
-        $country = "Unknown";
+        $host = $request->getHost();
+        $domainId = Domain::query()->where('domain', $host)->value('id');
 
-        try{
+        // Block scope-aware: global OR current domain
+        $isBlocked = BlockedIP::query()
+            ->where('ip', $ip)
+            ->where(function ($q) use ($domainId) {
+                $q->where('scope_type', 'global')
+                    ->orWhere(function ($dq) use ($domainId) {
+                        $dq->where('scope_type', 'domain')
+                           ->where('scope_value', $domainId ?: -1);
+                    });
+            })
+            ->where(function ($q) {
+                $q->whereNull('expires_at')->orWhere('expires_at', '>', now());
+            })
+            ->exists();
 
-            $geo = Http::get("http://ip-api.com/json/".$ip)->json();
+        if ($isBlocked) {
+            abort(403, 'Your IP has been blocked');
+        }
 
-            if(isset($geo['country'])){
-                $country = $geo['country'];
+        if (
+            $request->method() !== 'GET' ||
+            !$request->acceptsHtml() ||
+            preg_match('/\.(css|js|map|png|jpg|jpeg|gif|svg|ico|webp|woff|woff2|ttf|eot|txt|xml)$/i', $request->path())
+        ) {
+            return $next($request);
+        }
+
+        $domain = $host;
+
+        $domainModel = Domain::where('domain', $domain)
+            ->where('is_active', true)
+            ->first();
+
+        if (!$domainModel) {
+            return $next($request);
+        }
+
+        $agent = $request->userAgent() ?? 'unknown';
+        $type = str_contains(strtolower($agent), 'bot') ? 'bot' : 'human';
+
+        $duplicated = TrafficLog::query()
+            ->where('ip', $ip)
+            ->where('domain', $domain)
+            ->where('user_agent', $agent)
+            ->where('created_at', '>=', now()->subSeconds(10))
+            ->exists();
+
+        if ($duplicated) {
+            return $next($request);
+        }
+
+        $country = Cache::remember("geo_country_{$ip}", now()->addHours(24), function () use ($ip) {
+            try {
+                $geo = Http::timeout(2)->get('http://ip-api.com/json/' . $ip)->json();
+                return $geo['country'] ?? 'Unknown';
+            } catch (\Throwable $e) {
+                return 'Unknown';
             }
-
-        }catch(\Exception $e){}
+        });
 
         TrafficLog::create([
-            'domain_id'=>$domainModel->id,
-            'domain'=>$domain,
-            'ip'=>$ip,
-            'user_agent'=>$agent,
-            'type'=>$type,
-            'country'=>$country
+            'domain_id' => $domainModel->id,
+            'domain' => $domain,
+            'ip' => $ip,
+            'user_agent' => $agent,
+            'type' => $type,
+            'country' => $country,
         ]);
 
-        $threat = ThreatAnalyzer::analyze($ip,$type,$country);
-        if($threat['level'] == 'HIGH' || $threat['level'] == 'CRITICAL'){
-
-            $botToken = env('TELEGRAM_BOT_TOKEN');
-            $chatId = env('TELEGRAM_CHAT_ID');
-
-            $message = "⚠️ THREAT DETECTED\n".
-            "IP: ".$ip."\n".
-            "Risk Score: ".$threat['score']."\n".
-            "Threat Level: ".$threat['level'];
-
-            Http::withoutVerifying()->get(
-                "https://api.telegram.org/bot".$botToken."/sendMessage",
-            [
-                'chat_id'=>$chatId,
-                'text'=>$message
-            ]);
-
+        $threat = ThreatAnalyzer::analyze($ip, $type, $country);
+        if (($threat['level'] ?? 'LOW') === 'HIGH' || ($threat['level'] ?? 'LOW') === 'CRITICAL') {
+            $this->sendTelegramOnce(
+                "threat_{$ip}",
+                "⚠️ THREAT DETECTED\nIP: {$ip}\nRisk Score: " . ($threat['score'] ?? 0) . "\nThreat Level: " . ($threat['level'] ?? 'LOW'),
+                120
+            );
         }
 
-        $requests = TrafficLog::where('ip',$ip)
-            ->where('created_at','>=',now()->subMinute())
+        $requests = TrafficLog::where('ip', $ip)
+            ->where('created_at', '>=', now()->subMinute())
             ->count();
 
-        if($requests > 100){
+        $threshold = (int) env('TRAFFIC_BLOCK_THRESHOLD', 120);
+        if ($requests > $threshold) {
+            BlockedIP::firstOrCreate(
+                [
+                    'ip' => $ip,
+                    'scope_type' => 'global',
+                    'scope_value' => null,
+                ],
+                [
+                    'reason' => 'Spam requests (' . $requests . '/min)',
+                    'source' => 'auto',
+                    'expires_at' => now()->addMinutes((int) env('AUTO_UNBLOCK_MINUTES', 30)),
+                ]
+            );
 
-            BlockedIP::create([
-                'ip'=>$ip,
-                'reason'=>'Spam requests'
-            ]);
-
-            $botToken = env('TELEGRAM_BOT_TOKEN');
-            $chatId = env('TELEGRAM_CHAT_ID');
-
-            $message = "⚠️ ATTACK DETECTED\n".
-            "IP: ".$ip."\n".
-            "Requests: ".$requests."\n".
-            "Action: BLOCKED";
-
-            Http::withoutVerifying()->get(
-                "https://api.telegram.org/bot".$botToken."/sendMessage",
-            [
-                'chat_id'=>$chatId,
-                'text'=>$message
-            ]);
-
+            $this->sendTelegramOnce(
+                "attack_{$ip}",
+                "⚠️ ATTACK DETECTED\nIP: {$ip}\nRequests/min: {$requests}\nAction: BLOCKED",
+                300
+            );
         }
 
         SecurityDetector::detect($ip);
 
-        // TELEGRAM ALERT
+        $this->sendTelegramOnce(
+            "visitor_{$ip}",
+            "🚨 New Visitor\nDomain: {$domain}\nIP: {$ip}\nCountry: {$country}\nType: {$type}\nDevice: {$agent}\nTime: " . now(),
+            300
+        );
+
+        return $next($request);
+    }
+
+    private function isSystemIp(string $ip): bool
+    {
+        if (in_array($ip, ['127.0.0.1', '::1'])) {
+            return true;
+        }
+
+        if (!filter_var($ip, FILTER_VALIDATE_IP, FILTER_FLAG_NO_PRIV_RANGE | FILTER_FLAG_NO_RES_RANGE)) {
+            return true;
+        }
+
+        $whitelist = array_filter(array_map('trim', explode(',', (string) env('FIREWALL_WHITELIST_IPS', ''))));
+        return in_array($ip, $whitelist, true);
+    }
+
+    private function sendTelegramOnce(string $cacheKey, string $message, int $ttlSeconds = 300): void
+    {
+        if (Cache::has($cacheKey)) {
+            return;
+        }
+
         $botToken = env('TELEGRAM_BOT_TOKEN');
         $chatId = env('TELEGRAM_CHAT_ID');
 
-        $key = "telegram_sent_".$ip;
+        if (!$botToken || !$chatId) {
+            return;
+        }
 
-        if(!Cache::has($key)){
-
-            $message = "🚨 New Visitor\n".
-            "Domain: ".$domain."\n".
-            "IP: ".$ip."\n".
-            "Country: ".$country."\n".
-            "Type: ".$type."\n".
-            "Device: ".$agent."\n".
-            "Time: ".now();
-
-            Http::withoutVerifying()->get(
-                "https://api.telegram.org/bot".$botToken."/sendMessage",
+        try {
+            Http::withoutVerifying()->timeout(3)->get(
+                'https://api.telegram.org/bot' . $botToken . '/sendMessage',
                 [
-                    'chat_id'=>$chatId,
-                    'text'=>$message
+                    'chat_id' => $chatId,
+                    'text' => $message,
                 ]
             );
-
-            // chỉ gửi 1 lần mỗi 5 phút
-            Cache::put($key, true, now()->addMinutes(5));
+            Cache::put($cacheKey, true, now()->addSeconds($ttlSeconds));
+        } catch (\Throwable $e) {
+            // ignore notify errors
         }
-        return $next($request);
     }
 }
