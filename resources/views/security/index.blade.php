@@ -135,11 +135,11 @@ body {
     text-shadow: 0 0 5px var(--red);
 }
 
-/* Bo góc cho bảng */
+
 .dtable thead th:first-child { border-top-left-radius: 14px; }
 .dtable thead th:last-child { border-top-right-radius: 14px; }
 
-/* MONO */
+
 .t-mono {
     font-family: var(--font-mono);
     
@@ -151,7 +151,7 @@ body {
     font-size: 10px;
 }
 
-/* TYPE BADGE */
+
 .badge-danger {
     color: var(--red);
     font-weight: 700;
