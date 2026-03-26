@@ -5,12 +5,14 @@ namespace App\Http\Middleware;
 use App\Models\BlockedIP;
 use App\Models\Domain;
 use App\Models\TrafficLog;
+use App\Services\FirewallService;
 use App\Services\SecurityDetector;
 use App\Services\ThreatAnalyzer;
 use Closure;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Http;
+use App\Http\Controllers\DomainController; // 👉 ĐÃ THÊM: Import Controller để gọi lệnh Nginx
 
 class LogTraffic
 {
@@ -35,32 +37,17 @@ class LogTraffic
             return $next($request);
         }
 
+        // Never block local/system/whitelisted IPs
         if ($this->isSystemIp($ip)) {
             return $next($request);
         }
 
-        $host = $request->getHost();
-        $domainId = Domain::query()->where('domain', $host)->value('id');
-
-        // Block scope-aware: global OR current domain
-        $isBlocked = BlockedIP::query()
-            ->where('ip', $ip)
-            ->where(function ($q) use ($domainId) {
-                $q->where('scope_type', 'global')
-                    ->orWhere(function ($dq) use ($domainId) {
-                        $dq->where('scope_type', 'domain')
-                           ->where('scope_value', $domainId ?: -1);
-                    });
-            })
-            ->where(function ($q) {
-                $q->whereNull('expires_at')->orWhere('expires_at', '>', now());
-            })
-            ->exists();
-
-        if ($isBlocked) {
+        // Bị block thì chặn ở lớp ứng dụng (áp cho sites)
+        if (BlockedIP::where('ip', $ip)->exists()) {
             abort(403, 'Your IP has been blocked');
         }
 
+        // Bỏ qua request không cần track để tránh spam
         if (
             $request->method() !== 'GET' ||
             !$request->acceptsHtml() ||
@@ -69,19 +56,22 @@ class LogTraffic
             return $next($request);
         }
 
-        $domain = $host;
-
-        $domainModel = Domain::where('domain', $domain)
-            ->where('is_active', true)
-            ->first();
+        $domain = $request->getHost();
+        $domainModel = Domain::where('domain', $domain)->first();
 
         if (!$domainModel) {
-            return $next($request);
+            return $next($request); // host không nằm trong danh sách quản lý
+        }
+
+        // Nếu domain đang tắt thì chặn luôn request (tắt serve ở tầng ứng dụng)
+        if (!($domainModel->is_active ?? true)) {
+            abort(503, 'This website is temporarily disabled by Security Panel.');
         }
 
         $agent = $request->userAgent() ?? 'unknown';
         $type = str_contains(strtolower($agent), 'bot') ? 'bot' : 'human';
 
+        // Dedupe trong 10 giây cho cùng IP + UA + domain
         $duplicated = TrafficLog::query()
             ->where('ip', $ip)
             ->where('domain', $domain)
@@ -125,23 +115,35 @@ class LogTraffic
             ->count();
 
         $threshold = (int) env('TRAFFIC_BLOCK_THRESHOLD', 120);
+        
         if ($requests > $threshold) {
-            BlockedIP::firstOrCreate(
-                [
-                    'ip' => $ip,
-                    'scope_type' => 'global',
-                    'scope_value' => null,
-                ],
-                [
-                    'reason' => 'Spam requests (' . $requests . '/min)',
-                    'source' => 'auto',
-                    'expires_at' => now()->addMinutes((int) env('AUTO_UNBLOCK_MINUTES', 30)),
-                ]
-            );
+            $reason = "Auto blocked: {$requests} req/min";
+            FirewallService::block($ip, $reason);
+
+            // Auto-disable domain nếu bị tấn công liên tục
+            $windowSeconds = (int) env('AUTO_DISABLE_DOMAIN_WINDOW_SECONDS', 600);
+            $afterBlocks = (int) env('AUTO_DISABLE_DOMAIN_AFTER_BLOCKS', 3);
+            $hitsKey = "domain_attack_hits:{$domainModel->id}";
+            $hits = (int) Cache::get($hitsKey, 0) + 1;
+            Cache::put($hitsKey, $hits, now()->addSeconds($windowSeconds));
+
+            // 👉 ĐÃ NÂNG CẤP: Gọi Lệnh Giật Sập Nginx tại đây
+            if (($domainModel->is_active ?? true) && $hits >= $afterBlocks) {
+                
+                // 1. GỌI HÀM EMERGENCY SHUTDOWN TỪ DOMAIN CONTROLLER (SẬP NGINX THẬT)
+                DomainController::emergencyShutdown($domainModel->domain);
+
+                // 2. Bắn thông báo Telegram khẩn cấp
+                $this->sendTelegramOnce(
+                    "domain_disabled_{$domainModel->id}",
+                    "🚨 NGINX AUTO-OFF KÍCH HOẠT\nDomain: {$domainModel->domain}\nHits: {$hits}/{$afterBlocks}\nReason: Đã cắt đứt Nginx để chống DDoS!",
+                    600
+                );
+            }
 
             $this->sendTelegramOnce(
                 "attack_{$ip}",
-                "⚠️ ATTACK DETECTED\nIP: {$ip}\nRequests/min: {$requests}\nAction: BLOCKED",
+                "⚠️ ATTACK DETECTED\nIP: {$ip}\nRequests/min: {$requests}\nAction: BLOCKED IP",
                 300
             );
         }
@@ -163,6 +165,7 @@ class LogTraffic
             return true;
         }
 
+        // private ranges + server public IPs (from env)
         if (!filter_var($ip, FILTER_VALIDATE_IP, FILTER_FLAG_NO_PRIV_RANGE | FILTER_FLAG_NO_RES_RANGE)) {
             return true;
         }

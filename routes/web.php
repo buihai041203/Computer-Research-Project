@@ -24,7 +24,8 @@ Route::middleware('auth')->group(function () {
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 
     Route::resource('domains', DomainController::class);
-    Route::post('/domains/{id}/toggle', [DomainController::class, 'toggle']);
+    Route::get('/domains/{id}/toggle', [DomainController::class, 'toggle'])->name('domains.toggle');
+    Route::post('/domains/bulk-toggle', [DomainController::class, 'bulkToggle'])->name('domains.bulkToggle');
 
     Route::get('/traffic', [TrafficController::class, 'index']);
     Route::post('/traffic/clear', [TrafficController::class, 'clear'])->name('traffic.clear');
