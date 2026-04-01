@@ -5,6 +5,7 @@ use Illuminate\Support\Facades\Artisan;
 use Illuminate\Http\Request;
 use App\Models\Domain;
 use Illuminate\Support\Str;
+use Illuminate\Support\Facades\Log;
 
 class DomainController extends Controller
 {
@@ -15,32 +16,36 @@ class DomainController extends Controller
     }
 
     public function store(Request $request)
-{
-    $request->validate([
-        'domain' => 'required|unique:domains,domain',
-        // 'php_version' => 'required' // Có thể bỏ validate này nếu muốn hoàn toàn auto
-    ]);
+    {
+        $request->validate(['domain' => 'required|unique:domains,domain']);
 
-    // Ép kiểu luôn về 8.4 hoặc lấy từ request nếu sau này muốn mở lại
-    $phpVersion = $request->php_version ?? '8.4';
-    $rootPath = '/var/www/sites/' . $request->domain;
+        $phpVersion = $request->php_version ?? '8.4';
+        $rootPath = '/var/www/sites/' . $request->domain;
 
-    Domain::create([
-        'domain' => $request->domain,
-        'agent_key' => Str::random(32),
-        'root_path' => $rootPath,
-        'php_version' => $phpVersion, // Sẽ luôn là 8.4
-        'status' => 'pending_setup'
-    ]);
+        Domain::create([
+            'domain' => $request->domain,
+            'agent_key' => Str::random(32),
+            'root_path' => $rootPath,
+            'php_version' => $phpVersion,
+            'status' => 'pending_setup',
+            'is_active' => true 
+        ]);
 
-    return back()->with('success', 'Domain added successfully with PHP 8.4!');
-}
+        return back()->with('success', 'Domain added successfully!');
+    }
 
-    // Hàm mới để xử lý Xóa
     public function destroy($id)
     {
         $domain = Domain::findOrFail($id);
+        $domainName = $domain->domain;
         $domain->delete();
+
+        // Xóa cấu hình Nginx
+        $enabledPath = "/etc/nginx/sites-enabled/{$domainName}";
+        if (file_exists($enabledPath)) {
+            shell_exec("sudo rm {$enabledPath}");
+            shell_exec('sudo systemctl reload nginx');
+        }
 
         return back()->with('success', 'Domain deleted successfully!');
     }
