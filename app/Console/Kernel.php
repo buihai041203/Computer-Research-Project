@@ -18,6 +18,8 @@ class Kernel extends ConsoleKernel
 
         // Gỡ block tự động đã hết hạn
         $schedule->command('firewall:cleanup-auto-blocks')->everyTenMinutes();
+
+        $schedule->command('domains:sync-nginx')->everyTenMinutes();
     }
 
     protected function commands()

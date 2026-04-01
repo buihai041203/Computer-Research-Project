@@ -50,7 +50,7 @@ class DomainController extends Controller
     $domain->save();
 
     // Tự sync Nginx ngay lập tức
-    Artisan::call('domains:sync-nginx', ['--domain' => $domain->domain]);
+    Artisan::call('domains:sync-nginx');
 
     return back()->with('success', 'Domain ' . ($domain->is_active ? 'enabled' : 'disabled') . '!');
 }
