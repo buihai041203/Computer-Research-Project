@@ -30,8 +30,10 @@ Route::get('/country-stats', function () {
 
 Route::get('/attack-map', function(){
 
-    return TrafficLog::selectRaw('country, count(*) as total')
-        ->groupBy('country')
+    return TrafficLog::selectRaw('country, country_code, count(*) as total')
+        ->whereNotNull('country_code')
+        ->where('country_code', '!=', '')
+        ->groupBy('country', 'country_code')
         ->get();
 
 });

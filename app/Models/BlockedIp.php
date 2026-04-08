@@ -4,7 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 
-class BlockedIP extends Model
+class BlockedIp extends Model
 {
     protected $table = 'blocked_ips';
 
@@ -19,6 +19,5 @@ class BlockedIP extends Model
 
     protected $casts = [
         'expires_at' => 'datetime',
-        'reason',
     ];
 }

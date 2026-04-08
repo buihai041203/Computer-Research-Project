@@ -2,11 +2,13 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\BlockedIP;
+use App\Models\BlockedIp;
 use App\Models\Domain;
 use App\Models\SecurityEvent;
 use App\Models\TrafficLog;
+use App\Services\TelegramService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Validator;
 
 class AgentController extends Controller
@@ -112,15 +114,46 @@ class AgentController extends Controller
         }
 
         if (!$isSystemIp && $shouldBlock) {
-            BlockedIP::firstOrCreate(
-                ['ip' => $ip],
-                ['reason' => $reason]
+            $entry = BlockedIp::firstOrCreate(
+                [
+                    'ip' => $ip,
+                    'scope_type' => 'global',
+                    'scope_value' => null,
+                ],
+                [
+                    'reason' => $reason,
+                    'source' => 'auto',
+                ]
             );
+
+            if ($entry->wasRecentlyCreated) {
+                $this->sendTelegramOnce(
+                    'traffic_autoblock_' . $ip,
+                    "🚫 TRAFFIC AUTOBLOCK\nDomain: {$domain->domain}\nIP: {$ip}\nReason: {$reason}\nRequests/min: {$reqPerMin}\nHIGH/min: {$highThreatPerMin}\nCRITICAL/min: {$criticalPerMin}",
+                    120
+                );
+            }
         }
 
         return response()->json([
             'status' => 'ok',
-            'blocked' => BlockedIP::where('ip', $ip)->exists(),
+            'blocked' => BlockedIp::where('ip', $ip)->exists(),
         ]);
+    }
+
+    private function sendTelegramOnce(string $cacheKey, string $message, int $ttlSeconds = 300): void
+    {
+        if (Cache::has($cacheKey)) {
+            return;
+        }
+
+        try {
+            $result = TelegramService::send($message);
+            if (($result['ok'] ?? false) === true) {
+                Cache::put($cacheKey, true, now()->addSeconds($ttlSeconds));
+            }
+        } catch (\Throwable $e) {
+            // ignore notify errors
+        }
     }
 }

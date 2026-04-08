@@ -190,6 +190,18 @@ input:focus, textarea:focus {
         </div>
     @endif
 
+    @if(session('error'))
+        <div style="color:var(--red); background:rgba(248,113,113,0.1); padding:12px; border-radius:6px; margin-bottom:20px; font-size:14px; border-left:4px solid var(--red);">
+            {{ session('error') }}
+        </div>
+    @endif
+
+    @if(!empty($connectionError))
+        <div style="color:var(--red); background:rgba(248,113,113,0.1); padding:12px; border-radius:6px; margin-bottom:20px; font-size:14px; border-left:4px solid var(--red);">
+            Kết nối DB site lỗi: {{ $connectionError }}
+        </div>
+    @endif
+
     <div class="db-card">
         <h3 class="section-title">Database Configuration</h3>
         <form method="POST" action="{{ route('databases.config', $domainModel->domain) }}">
@@ -215,42 +227,30 @@ input:focus, textarea:focus {
     <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 24px;">
         <div class="db-card">
             <h3 class="section-title">Import SQL</h3>
-            {{-- <form method="POST" action="{{ route('databases.import', $domainModel->domain) }}" enctype="multipart/form-data">
-                
-                <div style="display:flex; flex-direction:column; gap:15px;">
-                    <input type="file" >
-                    <button type="submit" class="btn btn-primary" style="width:100%">START IMPORT</button>
-                </div>
-            </form> --}}
-            <form ... style="height:100%; display:flex; flex-direction:column;">
+            <form method="POST" action="{{ route('databases.import', $domainModel->domain) }}" enctype="multipart/form-data" style="height:100%; display:flex; flex-direction:column; gap:15px;">
                 @csrf
-    <div style="flex:1; display:flex; flex-direction:column; gap:15px;">
-        <input type="file" name="sql_file" accept=".sql,.txt" required style="width:100%">
-    </div>
+                <div style="flex:1; display:flex; flex-direction:column; gap:15px;">
+                    <input type="file" name="sql_file" accept=".sql,.txt" required style="width:100%">
+                </div>
 
-    <button type="submit" class="btn btn-primary" style="width:100%">
-        START IMPORT
-    </button>
-</form>
+                <button type="submit" class="btn btn-primary" style="width:100%">
+                    START IMPORT
+                </button>
+            </form>
         </div>
 
         <div class="db-card">
             <h3 class="section-title">SQL Console</h3>
-            {{-- <form method="POST" action="{{ route('databases.query', $domainModel->domain) }}">
-               
-                
-                <button type="submit" class="btn btn-primary" style="width:100%">EXECUTE QUERY</button>
-            </form> --}}
-            <form ... style="height:100%; display:flex; flex-direction:column;">
-    <div style="flex:1;">
-         @csrf
-        <textarea name="sql" rows="3" style="width:100%; margin-bottom:15px; resize:none;" placeholder="SELECT * FROM users LIMIT 10;">{{ old('sql') }}</textarea>
-    </div>
+            <form method="POST" action="{{ route('databases.query', $domainModel->domain) }}" style="height:100%; display:flex; flex-direction:column;">
+                @csrf
+                <div style="flex:1;">
+                    <textarea name="sql" rows="3" style="width:100%; margin-bottom:15px; resize:none;" placeholder="SELECT * FROM users LIMIT 10;">{{ old('sql') }}</textarea>
+                </div>
 
-    <button type="submit" class="btn btn-primary" style="width:100%">
-        EXECUTE QUERY
-    </button>
-</form>
+                <button type="submit" class="btn btn-primary" style="width:100%">
+                    EXECUTE QUERY
+                </button>
+            </form>
         </div>
     </div>
 
