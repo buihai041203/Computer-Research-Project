@@ -7,6 +7,7 @@ use App\Models\Domain;
 use App\Models\SiteDatabase;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Hash;
 
 class DatabaseManagerController extends Controller
 {
@@ -29,7 +30,12 @@ class DatabaseManagerController extends Controller
 
         $domainModel = Domain::where('domain', $domain)->firstOrFail();
 
-        $cfg = SiteDatabase::firstOrNew(['domain_id' => $domainModel->id]);
+        $cfg = SiteDatabase::where('domain_id', $domainModel->id)->first();
+        if (!$cfg) {
+            $cfg = SiteDatabase::where('site_name', $domainModel->domain)->first() ?? new SiteDatabase();
+        }
+
+        $cfg->domain_id = $domainModel->id;
         $cfg->site_name = $domainModel->domain;
         $cfg->db_connection = 'mysql';
         $cfg->db_host = $data['db_host'];
@@ -53,13 +59,19 @@ class DatabaseManagerController extends Controller
         $cfg = SiteDatabase::where('domain_id', $domainModel->id)->first();
 
         $tables = [];
+        $connectionError = null;
+
         if ($cfg && $cfg->is_active && $cfg->db_name && $cfg->db_user) {
-            $conn = $this->connectSite($cfg);
-            $tablesRaw = DB::connection($conn)->select('SHOW TABLES');
-            $tables = array_map(fn($r) => array_values((array) $r)[0], $tablesRaw);
+            try {
+                $conn = $this->connectSite($cfg);
+                $tablesRaw = DB::connection($conn)->select('SHOW TABLES');
+                $tables = array_map(fn($r) => array_values((array) $r)[0], $tablesRaw);
+            } catch (\Throwable $e) {
+                $connectionError = $e->getMessage();
+            }
         }
 
-        return view('databases.show', compact('domainModel', 'cfg', 'tables'));
+        return view('databases.show', compact('domainModel', 'cfg', 'tables', 'connectionError'));
     }
 
     public function table($domain, $table)
@@ -129,6 +141,8 @@ class DatabaseManagerController extends Controller
         if (!is_array($input)) {
             return back()->with('error', 'Invalid row payload');
         }
+
+        $input = $this->hashPasswordFields($input);
 
         DB::connection($conn)->table($safeTable)->where($primaryKey, $id)->update($input);
 
@@ -239,6 +253,34 @@ class DatabaseManagerController extends Controller
         $safeTable = preg_replace('/[^a-zA-Z0-9_]/', '', $table);
         abort_if($safeTable !== $table, 400, 'Invalid table name');
         return $safeTable;
+    }
+
+    private function hashPasswordFields(array $input): array
+    {
+        foreach ($input as $column => $value) {
+            if (!is_string($value) || $value === '') {
+                continue;
+            }
+
+            if (!in_array($column, ['password', 'password_hash'], true)) {
+                continue;
+            }
+
+            if ($this->isHashedPassword($value)) {
+                continue;
+            }
+
+            $input[$column] = Hash::make($value);
+        }
+
+        return $input;
+    }
+
+    private function isHashedPassword(string $value): bool
+    {
+        $info = password_get_info($value);
+
+        return !empty($info['algo']);
     }
 
     private function connectSite(SiteDatabase $cfg): string

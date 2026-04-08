@@ -1,11 +1,10 @@
 <?php
 
 namespace App\Http\Controllers;
-use Illuminate\Support\Facades\Artisan;
+
 use Illuminate\Http\Request;
 use App\Models\Domain;
 use Illuminate\Support\Str;
-use Illuminate\Support\Facades\Log;
 
 class DomainController extends Controller
 {
@@ -49,15 +48,4 @@ class DomainController extends Controller
 
         return back()->with('success', 'Domain deleted successfully!');
     }
-    public function toggle($id) {
-    $domain = Domain::findOrFail($id);
-    $domain->is_active = !($domain->is_active ?? true);
-    $domain->save();
-
-    // Tự sync Nginx ngay lập tức
-    Artisan::call('domains:sync-nginx', ['--domain' => $domain->domain]);
-
-    return back()->with('success', 'Domain ' . ($domain->is_active ? 'enabled' : 'disabled') . '!');
-}
-
 }

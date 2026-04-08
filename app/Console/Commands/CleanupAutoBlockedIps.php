@@ -2,7 +2,7 @@
 
 namespace App\Console\Commands;
 
-use App\Models\BlockedIP;
+use App\Models\BlockedIp;
 use App\Services\BlocklistSyncService;
 use Illuminate\Console\Command;
 
@@ -17,14 +17,14 @@ class CleanupAutoBlockedIps extends Command
         $minutes = (int) env('AUTO_UNBLOCK_MINUTES', 30);
 
         // Backward-compatible cleanup for old rows without expires_at
-        $legacyDeleted = BlockedIP::query()
+        $legacyDeleted = BlockedIp::query()
             ->where('reason', 'like', 'Auto blocked:%')
             ->whereNull('expires_at')
             ->where('created_at', '<', now()->subMinutes($minutes))
             ->delete();
 
         // New cleanup based on expires_at
-        $expiredDeleted = BlockedIP::query()
+        $expiredDeleted = BlockedIp::query()
             ->whereNotNull('expires_at')
             ->where('expires_at', '<=', now())
             ->delete();

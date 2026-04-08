@@ -1095,24 +1095,6 @@ const CountryTable = (() => {
    MODULE 9 · ATTACK MAP (jsVectorMap)
 ══════════════════════════════════════════════════════════════ */
 const AttackMap = (() => {
-    const COUNTRY_CODES = {
-        'Vietnam':        'VN',
-        'United States':  'US',
-        'China':          'CN',
-        'Singapore':      'SG',
-        'Russia':         'RU',
-        'Germany':        'DE',
-        'France':         'FR',
-        'Japan':          'JP',
-        'South Korea':    'KR',
-        'India':          'IN',
-        'Brazil':         'BR',
-        'United Kingdom': 'GB',
-        'Netherlands':    'NL',
-        'Canada':         'CA',
-        'Australia':      'AU',
-    };
-
     const map = new jsVectorMap({
         selector: '#attackMap',
         map: 'world',
@@ -1138,7 +1120,7 @@ const AttackMap = (() => {
             const data = await API.get('/api/attack-map');
             const regions = {};
             data.forEach(row => {
-                const code = COUNTRY_CODES[row.country];
+                const code = String(row.country_code || '').toUpperCase();
                 if (code) regions[code] = Number(row.total);
             });
             map.updateSeries([{ attribute: 'fill', values: regions }]);
