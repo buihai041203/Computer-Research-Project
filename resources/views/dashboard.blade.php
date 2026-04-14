@@ -1095,22 +1095,22 @@ const CountryTable = (() => {
    MODULE 9 · ATTACK MAP (jsVectorMap)
 ══════════════════════════════════════════════════════════════ */
 const AttackMap = (() => {
-    const COUNTRY_CODES = {
-        'Vietnam':        'VN',
-        'United States':  'US',
-        'China':          'CN',
-        'Singapore':      'SG',
-        'Russia':         'RU',
-        'Germany':        'DE',
-        'France':         'FR',
-        'Japan':          'JP',
-        'South Korea':    'KR',
-        'India':          'IN',
-        'Brazil':         'BR',
-        'United Kingdom': 'GB',
-        'Netherlands':    'NL',
-        'Canada':         'CA',
-        'Australia':      'AU',
+    const COUNTRY_COORDS = {
+        'Vietnam':        { name: 'Vietnam', coords: [108.2772, 14.0583] },
+        'United States':  { name: 'United States', coords: [-98.5795, 39.8283] },
+        'China':          { name: 'China', coords: [104.1954, 35.8617] },
+        'Singapore':      { name: 'Singapore', coords: [103.8198, 1.3521] },
+        'Russia':         { name: 'Russia', coords: [105.3188, 61.5240] },
+        'Germany':        { name: 'Germany', coords: [10.4515, 51.1657] },
+        'France':         { name: 'France', coords: [2.2137, 46.2276] },
+        'Japan':          { name: 'Japan', coords: [138.2529, 36.2048] },
+        'South Korea':    { name: 'South Korea', coords: [127.7669, 35.9078] },
+        'India':          { name: 'India', coords: [78.9629, 20.5937] },
+        'Brazil':         { name: 'Brazil', coords: [-51.9253, -14.2350] },
+        'United Kingdom': { name: 'United Kingdom', coords: [-3.4360, 55.3781] },
+        'Netherlands':    { name: 'Netherlands', coords: [5.2913, 52.1326] },
+        'Canada':         { name: 'Canada', coords: [-106.3468, 56.1304] },
+        'Australia':      { name: 'Australia', coords: [133.7751, -25.2744] },
     };
 
     const map = new jsVectorMap({
@@ -1123,25 +1123,53 @@ const AttackMap = (() => {
             hover:    { fill: '#1a3050', cursor: 'default' },
             selected: { fill: '#22d3ee' },
         },
-        series: {
-            regions: [{
-                attribute: 'fill',
-                scale: { min: '#152540', max: '#f87171' },
-                normalizeFunction: 'polynomial',
-                values: {},
-            }],
+        markersSelectable: false,
+        markers: [],
+        markerStyle: {
+            initial: {
+                fill: '#ef4444',
+                stroke: 'rgba(255,255,255,.45)',
+                strokeWidth: 1.5,
+                r: 6,
+            },
+            hover: {
+                fill: '#f87171',
+                stroke: '#ffffff',
+                strokeWidth: 2,
+            },
         },
     });
+
+    function toMarkers(rows) {
+        const maxTotal = Math.max(...rows.map(row => Number(row.total) || 0), 1);
+
+        return rows
+            .map(row => {
+                const country = COUNTRY_COORDS[row.country];
+                if (!country) return null;
+
+                const total = Number(row.total) || 0;
+                const radius = Math.max(5, Math.min(18, 5 + (total / maxTotal) * 13));
+
+                return {
+                    name: `${country.name}: ${total} visitors`,
+                    coords: country.coords,
+                    style: {
+                        r: radius,
+                        fill: '#ef4444',
+                        stroke: 'rgba(255,255,255,.45)',
+                        strokeWidth: 1.5,
+                    },
+                };
+            })
+            .filter(Boolean);
+    }
 
     async function refresh() {
         try {
             const data = await API.get('/api/attack-map');
-            const regions = {};
-            data.forEach(row => {
-                const code = COUNTRY_CODES[row.country];
-                if (code) regions[code] = Number(row.total);
-            });
-            map.updateSeries([{ attribute: 'fill', values: regions }]);
+            map.removeMarkers();
+            map.addMarkers(toMarkers(data));
         } catch (err) {
             console.warn('[AttackMap]', err);
         }
