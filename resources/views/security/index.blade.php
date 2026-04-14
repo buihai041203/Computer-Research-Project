@@ -231,7 +231,7 @@ body {
     const card = document.getElementById('security-events-card');
     if (!root || !card) return;
 
-    const intervalMs = 5000;
+    const intervalMs = 2000;
     let busy = false;
     const formatter = new Intl.DateTimeFormat(undefined, {
         dateStyle: 'medium',

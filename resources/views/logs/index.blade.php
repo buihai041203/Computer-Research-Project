@@ -177,7 +177,7 @@ td:last-child, th:last-child {
     const card = document.getElementById('logs-table-card');
     if (!root || !card) return;
 
-    const intervalMs = 5000;
+    const intervalMs = 2000;
     let busy = false;
     const formatter = new Intl.DateTimeFormat(undefined, {
         dateStyle: 'medium',

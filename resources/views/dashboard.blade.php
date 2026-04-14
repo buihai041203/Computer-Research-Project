@@ -1017,7 +1017,7 @@ const TrafficChart = (() => {
         }
     }
 
-    return { init: () => { refresh(); return setInterval(refresh, 5000); } };
+    return { init: () => { refresh(); return setInterval(refresh, 2000); } };
 })();
 
 /* ══════════════════════════════════════════════════════════════
@@ -1210,7 +1210,7 @@ const SecurityEvents = (() => {
         }
     }
 
-    return { init: () => { refresh(); return setInterval(refresh, 5000); } };
+    return { init: () => { refresh(); return setInterval(refresh, 2000); } };
 })();
 
 /* ══════════════════════════════════════════════════════════════
@@ -1300,7 +1300,7 @@ const DashboardPanels = (() => {
     return {
         init: () => {
             refresh();
-            return setInterval(refresh, 5000);
+            return setInterval(refresh, 2000);
         }
     };
 })();

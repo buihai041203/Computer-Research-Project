@@ -424,7 +424,7 @@ html, body {
     const live = document.getElementById('firewall-live-sections');
     if (!live) return;
 
-    const intervalMs = 5000;
+    const intervalMs = 2000;
     let busy = false;
     const formatter = new Intl.DateTimeFormat(undefined, {
         dateStyle: 'medium',

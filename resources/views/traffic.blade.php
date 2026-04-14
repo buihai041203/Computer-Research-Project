@@ -379,7 +379,7 @@ html, body {
     let activeFilter = 'all';
     let searchQuery = '';
     let busy = false;
-    const intervalMs = 5000;
+    const intervalMs = 2000;
     const formatter = new Intl.DateTimeFormat(undefined, {
         dateStyle: 'medium',
         timeStyle: 'medium',
