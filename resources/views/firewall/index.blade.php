@@ -354,6 +354,8 @@ html, body {
             <thead>
                 <tr>
                     <th>IP ADDRESS</th>
+                    <th>SCOPE</th>
+                    <th>SOURCE</th>
                     <th>REASON</th>
                     <th>ACTION</th>
                 </tr>
@@ -365,6 +367,24 @@ html, body {
 
                     <td class="t-mono" style="color:var(--cyan)">
                         {{ $ip->ip }}
+                    </td>
+
+                    <td class="t-mono">
+                        <span style="color:{{ $ip->scope_type === 'domain' ? 'var(--cyan)' : 'var(--green)' }}; font-weight:700;">
+                            {{ $ip->scope_label ?? strtoupper($ip->scope_type ?? 'global') }}
+                        </span>
+                        @if(($ip->scope_type ?? null) === 'domain' && !empty($ip->scope_domain))
+                            <div style="font-size:11px; color:var(--text-secondary); margin-top:4px;">
+                                {{ $ip->scope_domain }}
+                            </div>
+                        @endif
+                    </td>
+
+                    <td class="t-mono" style="color:var(--text-secondary)">
+                        {{ strtoupper($ip->source ?? 'manual') }}
+                        @if(!empty($ip->expires_at))
+                            <div style="font-size:11px; margin-top:4px;">TTL: {{ $ip->expires_at }}</div>
+                        @endif
                     </td>
 
                     <td style="color:var(--text-secondary)">
@@ -385,7 +405,7 @@ html, body {
                 </tr>
                 @empty
                 <tr>
-                    <td colspan="3" style="text-align:center; padding:30px; font-family:var(--font-mono); color:var(--text-secondary)">
+                    <td colspan="5" style="text-align:center; padding:30px; font-family:var(--font-mono); color:var(--text-secondary)">
                         // NO BLOCKED IPS
                     </td>
                 </tr>

@@ -24,7 +24,22 @@ class FirewallController extends Controller
 
     public function index()
     {
-        $ips = BlockedIp::latest()->get();
+        $ips = BlockedIp::query()
+            ->latest()
+            ->get()
+            ->map(function ($row) {
+                $row->scope_label = $row->scope_type === 'domain'
+                    ? 'DOMAIN'
+                    : 'GLOBAL';
+
+                $row->scope_domain = null;
+                if ($row->scope_type === 'domain' && !empty($row->scope_value)) {
+                    $row->scope_domain = Domain::query()->where('id', $row->scope_value)->value('domain');
+                }
+
+                return $row;
+            });
+
         $domains = Domain::query()->where('is_active', true)->orderBy('domain')->get(['id', 'domain']);
 
         $activeBlocks = BlockedIp::query()
