@@ -91,13 +91,25 @@ class LogTraffic
         $country = Cache::get($countryCacheKey);
 
         if (!$country || $country === 'Unknown') {
-            $resolvedCountry = $this->resolveCountry($ip);
-            if ($resolvedCountry !== 'Unknown') {
-                $country = $resolvedCountry;
+            $knownCountry = TrafficLog::query()
+                ->where('ip', $ip)
+                ->whereNotNull('country')
+                ->where('country', '!=', 'Unknown')
+                ->latest()
+                ->value('country');
+
+            if ($knownCountry) {
+                $country = $knownCountry;
                 Cache::put($countryCacheKey, $country, now()->addHours(24));
             } else {
-                $country = 'Unknown';
-                Cache::put($countryCacheKey, $country, now()->addSeconds(2));
+                $resolvedCountry = $this->resolveCountry($ip);
+                if ($resolvedCountry !== 'Unknown') {
+                    $country = $resolvedCountry;
+                    Cache::put($countryCacheKey, $country, now()->addHours(24));
+                } else {
+                    $country = 'Unknown';
+                    Cache::put($countryCacheKey, $country, now()->addSeconds(2));
+                }
             }
         }
 
