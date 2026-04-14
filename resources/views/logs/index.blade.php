@@ -163,12 +163,29 @@ td:last-child, th:last-child {
                     <span style="font-weight: 500;">{{ $log->threat ?? 'LOW' }}</span>
                 </td>
                 <td>{{ $log->user_agent }}</td>
-                <td>{{ $log->created_at }}</td>
+                <td class="js-local-datetime" data-datetime="{{ optional($log->created_at)->toIso8601String() }}">{{ $log->created_at }}</td>
             </tr>
             @endforeach
         </tbody>
     </table>
 </div>
 </div>
+
+<script>
+(function () {
+    const formatter = new Intl.DateTimeFormat(undefined, {
+        dateStyle: 'medium',
+        timeStyle: 'medium',
+    });
+
+    document.querySelectorAll('.js-local-datetime').forEach((el) => {
+        const raw = el.dataset.datetime;
+        if (!raw) return;
+        const date = new Date(raw);
+        if (Number.isNaN(date.getTime())) return;
+        el.textContent = formatter.format(date);
+    });
+})();
+</script>
 
 @endsection
