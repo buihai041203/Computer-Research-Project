@@ -90,13 +90,15 @@ class LogTraffic
         $countryCacheKey = "geo_country_{$ip}";
         $country = Cache::get($countryCacheKey);
 
-        if (!$country) {
-            $country = $this->resolveCountry($ip);
-            Cache::put(
-                $countryCacheKey,
-                $country,
-                $country === 'Unknown' ? now()->addMinutes(10) : now()->addHours(24)
-            );
+        if (!$country || $country === 'Unknown') {
+            $resolvedCountry = $this->resolveCountry($ip);
+            if ($resolvedCountry !== 'Unknown') {
+                $country = $resolvedCountry;
+                Cache::put($countryCacheKey, $country, now()->addHours(24));
+            } else {
+                $country = 'Unknown';
+                Cache::put($countryCacheKey, $country, now()->addMinute());
+            }
         }
 
         $response = $next($request);
