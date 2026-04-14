@@ -97,7 +97,7 @@ class LogTraffic
                 Cache::put($countryCacheKey, $country, now()->addHours(24));
             } else {
                 $country = 'Unknown';
-                Cache::put($countryCacheKey, $country, now()->addMinute());
+                Cache::put($countryCacheKey, $country, now()->addSeconds(2));
             }
         }
 
