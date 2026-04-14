@@ -134,7 +134,7 @@ tbody tr:hover td {
                             <span class="badge badge-human"> HUMAN</span>
                         @endif
                     </td>
-                    <td class="text-gray-400 text-xs">
+                    <td class="text-gray-400 text-xs js-local-datetime" data-datetime="{{ optional($log->created_at)->toIso8601String() }}">
                         {{ $log->created_at->diffForHumans() }}
                     </td>
                 </tr>
@@ -157,6 +157,20 @@ tbody tr:hover td {
 
     const intervalMs = 5000;
     let busy = false;
+    const formatter = new Intl.DateTimeFormat(undefined, {
+        dateStyle: 'medium',
+        timeStyle: 'medium',
+    });
+
+    function applyLocalTime(scope) {
+        scope.querySelectorAll('.js-local-datetime').forEach((el) => {
+            const raw = el.dataset.datetime;
+            if (!raw) return;
+            const date = new Date(raw);
+            if (Number.isNaN(date.getTime())) return;
+            el.textContent = formatter.format(date);
+        });
+    }
 
     async function refreshCard() {
         if (busy || document.hidden) return;
@@ -166,7 +180,10 @@ tbody tr:hover td {
             const html = await res.text();
             const doc = new DOMParser().parseFromString(html, 'text/html');
             const next = doc.getElementById('traffic-table-card');
-            if (next) card.innerHTML = next.innerHTML;
+            if (next) {
+                card.innerHTML = next.innerHTML;
+                applyLocalTime(card);
+            }
         } catch (e) {
             console.warn('[TrafficPageRefresh]', e);
         } finally {
@@ -174,6 +191,7 @@ tbody tr:hover td {
         }
     }
 
+    applyLocalTime(card);
     window.setInterval(refreshCard, intervalMs);
 })();
 </script>

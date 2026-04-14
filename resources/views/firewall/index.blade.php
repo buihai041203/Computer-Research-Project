@@ -284,7 +284,7 @@ html, body {
                         <td class="t-mono" style="color:var(--cyan)">{{ $row->ip }}</td>
                         <td class="t-mono">{{ $row->total }}</td>
                         <td class="t-mono" style="color:{{ ($row->risky ?? 0) > 0 ? 'var(--red)' : 'var(--text-secondary)' }}">{{ $row->risky ?? 0 }}</td>
-                        <td class="t-mono">{{ $row->last_seen }}</td>
+                        <td class="t-mono js-local-datetime" data-datetime="{{ \Illuminate\Support\Carbon::parse($row->last_seen)->toIso8601String() }}">{{ $row->last_seen }}</td>
                         <td>
                             @if($row->is_blocked ?? false)
                                 <span class="btn-success" title="{{ $row->blocked_reason ?? 'IP đang bị block' }}">
@@ -384,7 +384,7 @@ html, body {
                         <td class="t-mono" style="color:var(--text-secondary)">
                             {{ strtoupper($ip->source ?? 'manual') }}
                             @if(!empty($ip->expires_at))
-                                <div style="font-size:11px; margin-top:4px;">TTL: {{ $ip->expires_at }}</div>
+                                <div style="font-size:11px; margin-top:4px;">TTL: <span class="js-local-datetime" data-datetime="{{ optional($ip->expires_at)->toIso8601String() }}">{{ $ip->expires_at }}</span></div>
                             @endif
                         </td>
 
@@ -426,11 +426,25 @@ html, body {
 
     const intervalMs = 5000;
     let busy = false;
+    const formatter = new Intl.DateTimeFormat(undefined, {
+        dateStyle: 'medium',
+        timeStyle: 'medium',
+    });
 
     function isEditing() {
         const active = document.activeElement;
         const tag = (active?.tagName || '').toLowerCase();
         return ['input', 'textarea', 'select'].includes(tag);
+    }
+
+    function applyLocalTime(scope) {
+        scope.querySelectorAll('.js-local-datetime').forEach((el) => {
+            const raw = el.dataset.datetime;
+            if (!raw) return;
+            const date = new Date(raw);
+            if (Number.isNaN(date.getTime())) return;
+            el.textContent = formatter.format(date);
+        });
     }
 
     async function refreshSections() {
@@ -441,7 +455,10 @@ html, body {
             const html = await res.text();
             const doc = new DOMParser().parseFromString(html, 'text/html');
             const next = doc.getElementById('firewall-live-sections');
-            if (next) live.innerHTML = next.innerHTML;
+            if (next) {
+                live.innerHTML = next.innerHTML;
+                applyLocalTime(live);
+            }
         } catch (e) {
             console.warn('[FirewallPageRefresh]', e);
         } finally {
@@ -449,6 +466,7 @@ html, body {
         }
     }
 
+    applyLocalTime(live);
     window.setInterval(refreshSections, intervalMs);
 })();
 </script>

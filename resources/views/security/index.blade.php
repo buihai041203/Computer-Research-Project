@@ -208,7 +208,7 @@ body {
                         {{ $event->description }}
                     </td>
 
-                    <td class="t-mono" style="color: var(--text-secondary)">
+                    <td class="t-mono js-local-datetime" style="color: var(--text-secondary)" data-datetime="{{ optional($event->created_at)->toIso8601String() }}">
                         {{ $event->created_at }}
                     </td>
                 </tr>
@@ -233,6 +233,20 @@ body {
 
     const intervalMs = 5000;
     let busy = false;
+    const formatter = new Intl.DateTimeFormat(undefined, {
+        dateStyle: 'medium',
+        timeStyle: 'medium',
+    });
+
+    function applyLocalTime(scope) {
+        scope.querySelectorAll('.js-local-datetime').forEach((el) => {
+            const raw = el.dataset.datetime;
+            if (!raw) return;
+            const date = new Date(raw);
+            if (Number.isNaN(date.getTime())) return;
+            el.textContent = formatter.format(date);
+        });
+    }
 
     async function refreshCard() {
         if (busy || document.hidden) return;
@@ -242,7 +256,10 @@ body {
             const html = await res.text();
             const doc = new DOMParser().parseFromString(html, 'text/html');
             const next = doc.getElementById('security-events-card');
-            if (next) card.innerHTML = next.innerHTML;
+            if (next) {
+                card.innerHTML = next.innerHTML;
+                applyLocalTime(card);
+            }
         } catch (e) {
             console.warn('[SecurityPageRefresh]', e);
         } finally {
@@ -250,6 +267,7 @@ body {
         }
     }
 
+    applyLocalTime(root);
     window.setInterval(refreshCard, intervalMs);
 })();
 </script>
