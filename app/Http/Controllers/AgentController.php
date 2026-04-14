@@ -7,6 +7,7 @@ use App\Models\Domain;
 use App\Models\SecurityEvent;
 use App\Models\TrafficLog;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Validator;
 
@@ -79,11 +80,22 @@ class AgentController extends Controller
             || in_array($threat, ['HIGH', 'CRITICAL'], true);
 
         if ($shouldRecordSecurityEvent) {
+            $securityType = $request->event_type ?? 'suspicious_activity';
+            $securityDescription = $request->event_description ?? ('Threat: ' . $threat . ' | Path: ' . ($request->path ?? '-'));
+
             SecurityEvent::create([
                 'ip' => $ip,
-                'type' => $request->event_type ?? 'suspicious_activity',
-                'description' => $request->event_description ?? ('Threat: ' . $threat . ' | Path: ' . ($request->path ?? '-')),
+                'type' => $securityType,
+                'description' => $securityDescription,
             ]);
+
+            $this->sendSecurityEventTelegram(
+                domain: $domain->domain,
+                ip: $ip,
+                type: $securityType,
+                description: $securityDescription,
+                threat: $threat,
+            );
         }
 
         $loginFailThreshold = (int) env('FIREWALL_LOGIN_FAIL_BLOCK_THRESHOLD', 5);
@@ -188,17 +200,6 @@ class AgentController extends Controller
 
         app(\App\Services\BlocklistSyncService::class)->sync();
 
-        if ($eventType !== 'login_success' && in_array($threat, ['HIGH', 'CRITICAL'], true) && $request->filled('event_type')) {
-            $this->sendTelegramDirect(
-                "⚠️ SECURITY EVENT\n" .
-                "Domain: {$domain->domain}\n" .
-                "IP: {$ip}\n" .
-                "Type: " . ($request->input('event_type') ?? 'suspicious_activity') . "\n" .
-                "Threat: {$threat}\n" .
-                "Description: " . ($request->input('event_description') ?? '-')
-            );
-        }
-
         return response()->json([
             'status' => 'ok',
             'blocked' => BlockedIp::where('ip', $ip)->where(function ($q) use ($domain) {
@@ -208,6 +209,25 @@ class AgentController extends Controller
                     });
             })->exists(),
         ]);
+    }
+
+    private function sendSecurityEventTelegram(string $domain, string $ip, string $type, string $description, string $threat): void
+    {
+        $cacheKey = 'tg_security_event:' . sha1($domain . '|' . $ip . '|' . $type . '|' . $description);
+        if (Cache::has($cacheKey)) {
+            return;
+        }
+
+        $this->sendTelegramDirect(
+            "⚠️ SECURITY EVENT\n" .
+            "Domain: {$domain}\n" .
+            "IP: {$ip}\n" .
+            "Type: {$type}\n" .
+            "Threat: {$threat}\n" .
+            "Description: {$description}"
+        );
+
+        Cache::put($cacheKey, true, now()->addSeconds(60));
     }
 
     private function sendTelegramDirect(string $message): void
