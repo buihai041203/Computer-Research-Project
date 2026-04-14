@@ -237,12 +237,16 @@ html, body {
                     <td class="t-mono">{{ $s->total }}</td>
                     <td class="t-mono" style="color:{{ ($s->risky ?? 0) > 0 ? 'var(--red)' : 'var(--text-secondary)' }}">{{ $s->risky ?? 0 }}</td>
                     <td>
-                        <form method="POST" action="/firewall/block">
-                            @csrf
-                            <input type="hidden" name="ip" value="{{ $s->ip }}">
-                            <input type="hidden" name="reason" value="Manual quick block from suspicious list">
-                            <button class="btn-danger" type="submit">BLOCK</button>
-                        </form>
+                        @if($s->is_blocked ?? false)
+                            <span class="btn-success" title="{{ $s->blocked_reason ?? 'Đang bị block toàn cục' }}">BLOCKED</span>
+                        @else
+                            <form method="POST" action="/firewall/block">
+                                @csrf
+                                <input type="hidden" name="ip" value="{{ $s->ip }}">
+                                <input type="hidden" name="reason" value="Manual quick block from suspicious list">
+                                <button class="btn-danger" type="submit">BLOCK</button>
+                            </form>
+                        @endif
                     </td>
                 </tr>
             @empty
@@ -281,12 +285,22 @@ html, body {
                     <td class="t-mono" style="color:{{ ($row->risky ?? 0) > 0 ? 'var(--red)' : 'var(--text-secondary)' }}">{{ $row->risky ?? 0 }}</td>
                     <td class="t-mono">{{ $row->last_seen }}</td>
                     <td>
-                        <form method="POST" action="/firewall/block">
-                            @csrf
-                            <input type="hidden" name="ip" value="{{ $row->ip }}">
-                            <input type="hidden" name="reason" value="Manual block from IP-by-domain matrix ({{ $row->domain }})">
-                            <button class="btn-danger" type="submit">BLOCK</button>
-                        </form>
+                        @if($row->is_blocked ?? false)
+                            <span class="btn-success" title="{{ $row->blocked_reason ?? 'IP đang bị block' }}">
+                                BLOCKED{{ ($row->block_scope ?? null) === 'domain' ? ' (DOMAIN)' : (($row->block_scope ?? null) === 'global' ? ' (GLOBAL)' : '') }}
+                            </span>
+                        @else
+                            <form method="POST" action="/firewall/block">
+                                @csrf
+                                <input type="hidden" name="ip" value="{{ $row->ip }}">
+                                <input type="hidden" name="reason" value="Manual block from IP-by-domain matrix ({{ $row->domain }})">
+                                @if(!empty($row->domain_id))
+                                    <input type="hidden" name="scope_type" value="domain">
+                                    <input type="hidden" name="scope_value" value="{{ $row->domain_id }}">
+                                @endif
+                                <button class="btn-danger" type="submit">BLOCK</button>
+                            </form>
+                        @endif
                     </td>
                 </tr>
             @empty
