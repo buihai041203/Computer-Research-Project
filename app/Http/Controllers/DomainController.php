@@ -20,11 +20,13 @@ class DomainController extends Controller
         $request->validate(['domain' => 'required|unique:domains,domain']);
 
         $phpVersion = $request->php_version ?? '8.4';
-        $rootPath = '/var/www/sites/' . $request->domain;
+        $domainName = trim((string) $request->domain);
+        $rootPath = '/var/www/sites/' . $domainName;
+        $agentKey = $this->resolveStableAgentKey($domainName) ?? Str::random(32);
 
         Domain::create([
-            'domain' => $request->domain,
-            'agent_key' => Str::random(32),
+            'domain' => $domainName,
+            'agent_key' => $agentKey,
             'root_path' => $rootPath,
             'php_version' => $phpVersion,
             'status' => 'pending_setup',
@@ -49,15 +51,29 @@ class DomainController extends Controller
 
         return back()->with('success', 'Domain deleted successfully!');
     }
-    public function toggle($id) {
-    $domain = Domain::findOrFail($id);
-    $domain->is_active = !($domain->is_active ?? true);
-    $domain->save();
 
-    // Tự sync Nginx ngay lập tức
-    Artisan::call('domains:sync-nginx', ['--domain' => $domain->domain]);
+    private function resolveStableAgentKey(string $domainName): ?string
+    {
+        $candidateFiles = [
+            "/var/www/sites/{$domainName}/register/db_connect.php",
+        ];
 
-    return back()->with('success', 'Domain ' . ($domain->is_active ? 'enabled' : 'disabled') . '!');
-}
+        foreach ($candidateFiles as $file) {
+            if (!is_readable($file)) {
+                continue;
+            }
+
+            $content = @file_get_contents($file);
+            if ($content === false) {
+                continue;
+            }
+
+            if (preg_match("/['\"]key['\"]\s*=>\s*['\"]([^'\"]+)['\"]/, $content, $m)) {
+                return trim($m[1]);
+            }
+        }
+
+        return null;
+    }
 
 }
