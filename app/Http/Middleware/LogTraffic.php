@@ -2,7 +2,7 @@
 
 namespace App\Http\Middleware;
 
-use App\Models\BlockedIP;
+use App\Models\BlockedIp;
 use App\Models\Domain;
 use App\Models\TrafficLog;
 use App\Services\FirewallService;
@@ -43,7 +43,7 @@ class LogTraffic
         }
 
         // Bị block thì chặn ở lớp ứng dụng (áp cho sites)
-        if (BlockedIP::where('ip', $ip)->exists()) {
+        if (BlockedIp::where('ip', $ip)->exists()) {
             abort(403, 'Your IP has been blocked');
         }
 
@@ -87,14 +87,17 @@ class LogTraffic
             return $next($request);
         }
 
-        $country = Cache::remember("geo_country_{$ip}", now()->addHours(24), function () use ($ip) {
-            try {
-                $geo = Http::timeout(2)->get('http://ip-api.com/json/' . $ip)->json();
-                return $geo['country'] ?? 'Unknown';
-            } catch (\Throwable $e) {
-                return 'Unknown';
-            }
-        });
+        $countryCacheKey = "geo_country_{$ip}";
+        $country = Cache::get($countryCacheKey);
+
+        if (!$country) {
+            $country = $this->resolveCountry($ip);
+            Cache::put(
+                $countryCacheKey,
+                $country,
+                $country === 'Unknown' ? now()->addMinutes(10) : now()->addHours(24)
+            );
+        }
 
         $response = $next($request);
         $statusCode = method_exists($response, 'getStatusCode') ? $response->getStatusCode() : 200;
@@ -170,6 +173,46 @@ class LogTraffic
         return $response;
     }
 
+    private function resolveCountry(string $ip): string
+    {
+        try {
+            $geo = Http::timeout(2)->get('http://ip-api.com/json/' . $ip)->json();
+            if (($geo['status'] ?? null) === 'success' && !empty($geo['country'])) {
+                return (string) $geo['country'];
+            }
+        } catch (\Throwable $e) {
+            // fall through to secondary provider
+        }
+
+        try {
+            $geo = Http::timeout(2)->get('https://ipinfo.io/' . $ip . '/json')->json();
+            if (!empty($geo['country'])) {
+                return match (strtoupper((string) $geo['country'])) {
+                    'VN' => 'Vietnam',
+                    'US' => 'United States',
+                    'CN' => 'China',
+                    'SG' => 'Singapore',
+                    'RU' => 'Russia',
+                    'DE' => 'Germany',
+                    'FR' => 'France',
+                    'JP' => 'Japan',
+                    'KR' => 'South Korea',
+                    'IN' => 'India',
+                    'BR' => 'Brazil',
+                    'GB' => 'United Kingdom',
+                    'NL' => 'Netherlands',
+                    'CA' => 'Canada',
+                    'AU' => 'Australia',
+                    default => strtoupper((string) $geo['country']),
+                };
+            }
+        } catch (\Throwable $e) {
+            // ignore and return Unknown below
+        }
+
+        return 'Unknown';
+    }
+
     private function handleLoginAutoblock(int $domainId, string $domain, string $ip, string $requestPath, bool $isLoginAttempt, mixed $response): void
     {
         if (!$isLoginAttempt) {
@@ -200,7 +243,7 @@ class LogTraffic
             return;
         }
 
-        BlockedIP::updateOrCreate(
+        BlockedIp::updateOrCreate(
             ['ip' => $ip],
             ['reason' => "Auto blocked(login): {$domain}, failed login {$failCount} times / {$windowMinutes}m"]
         );
