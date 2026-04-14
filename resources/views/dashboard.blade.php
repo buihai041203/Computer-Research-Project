@@ -1297,7 +1297,12 @@ const DashboardPanels = (() => {
         }
     }
 
-    return { init: () => setInterval(refresh, 5000) };
+    return {
+        init: () => {
+            refresh();
+            return setInterval(refresh, 5000);
+        }
+    };
 })();
 
 /* ══════════════════════════════════════════════════════════════
