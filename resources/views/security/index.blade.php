@@ -159,7 +159,7 @@ body {
 }
 </style>
 
-<div class="scc-wrap">
+<div class="scc-wrap" id="security-page-root">
 
     <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:14px;">
         <h1 class="page-title" style="margin-bottom:0;">
@@ -182,7 +182,7 @@ body {
         <div style="color:var(--red); margin-bottom:10px; font-family:var(--font-mono); font-size:11px;">{{ session('error') }}</div>
     @endif
 
-    <div class="card">
+    <div class="card" id="security-events-card">
         <table class="dtable">
             <thead>
                 <tr>
@@ -224,5 +224,34 @@ body {
     </div>
 
 </div>
+
+<script>
+(function () {
+    const root = document.getElementById('security-page-root');
+    const card = document.getElementById('security-events-card');
+    if (!root || !card) return;
+
+    const intervalMs = 5000;
+    let busy = false;
+
+    async function refreshCard() {
+        if (busy || document.hidden) return;
+        busy = true;
+        try {
+            const res = await fetch(window.location.href, { headers: { 'X-Requested-With': 'XMLHttpRequest' } });
+            const html = await res.text();
+            const doc = new DOMParser().parseFromString(html, 'text/html');
+            const next = doc.getElementById('security-events-card');
+            if (next) card.innerHTML = next.innerHTML;
+        } catch (e) {
+            console.warn('[SecurityPageRefresh]', e);
+        } finally {
+            busy = false;
+        }
+    }
+
+    window.setInterval(refreshCard, intervalMs);
+})();
+</script>
 
 @endsection
