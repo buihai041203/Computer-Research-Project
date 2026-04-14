@@ -116,7 +116,7 @@ class LogTraffic
         $response = $next($request);
         $statusCode = method_exists($response, 'getStatusCode') ? $response->getStatusCode() : 200;
 
-        TrafficLog::create([
+        $trafficLog = TrafficLog::create([
             'domain_id' => $domainModel->id,
             'domain' => $domain,
             'request_path' => $requestPath,
@@ -126,6 +126,10 @@ class LogTraffic
             'type' => $type,
             'country' => $country,
         ]);
+
+        if ($country === 'Unknown') {
+            $this->attemptImmediateCountryCorrection($trafficLog, $ip);
+        }
 
         $this->handleLoginAutoblock($domainModel->id, $domain, $ip, $requestPath, $isLoginAttempt, $response);
 
@@ -225,6 +229,30 @@ class LogTraffic
         }
 
         return 'Unknown';
+    }
+
+    private function attemptImmediateCountryCorrection(TrafficLog $trafficLog, string $ip): void
+    {
+        $retryLockKey = "geo_country_retry_lock_{$ip}";
+
+        if (!Cache::add($retryLockKey, true, now()->addSeconds(2))) {
+            return;
+        }
+
+        $resolvedCountry = $this->resolveCountry($ip);
+        if ($resolvedCountry === 'Unknown') {
+            return;
+        }
+
+        $trafficLog->update(['country' => $resolvedCountry]);
+        Cache::put("geo_country_{$ip}", $resolvedCountry, now()->addHours(24));
+
+        TrafficLog::query()
+            ->where('ip', $ip)
+            ->where('country', 'Unknown')
+            ->latest()
+            ->limit(20)
+            ->update(['country' => $resolvedCountry]);
     }
 
     private function handleLoginAutoblock(int $domainId, string $domain, string $ip, string $requestPath, bool $isLoginAttempt, mixed $response): void
