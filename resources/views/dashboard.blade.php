@@ -576,7 +576,7 @@ body {
 </header>
 
 {{-- ── STAT CARDS ───────────────────────── --}}
-<div class="g-3" role="region" aria-label="Traffic statistics">
+<div class="g-3" role="region" aria-label="Traffic statistics" id="dashboard-stat-cards">
 
     <div class="card stat stat--cyan" aria-label="Total visitors">
         <span class="stat__orb" aria-hidden="true"></span>
@@ -746,7 +746,7 @@ body {
     </div>
 
     {{-- RIGHT: LATEST VISITORS --}}
-    <div class="card">
+    <div class="card" id="dashboard-latest-visitors-card">
         <div class="card__header">
             <span class="t-section">Latest Visitors</span>
             <span class="t-label">{{ count($latestVisitors) }} entries</span>
@@ -1240,7 +1240,40 @@ const SystemGauges = (() => {
 })();
 
 /* ══════════════════════════════════════════════════════════════
-   MODULE 12 · ACTIONS  (block IP)
+   MODULE 12 · DASHBOARD PARTIAL REFRESH
+══════════════════════════════════════════════════════════════ */
+const DashboardPanels = (() => {
+    const stats = document.getElementById('dashboard-stat-cards');
+    const latestVisitors = document.getElementById('dashboard-latest-visitors-card');
+    let busy = false;
+
+    async function refresh() {
+        if (busy || document.hidden) return;
+        busy = true;
+        try {
+            const res = await fetch(window.location.href, {
+                headers: { 'X-Requested-With': 'XMLHttpRequest' },
+            });
+            const html = await res.text();
+            const doc = new DOMParser().parseFromString(html, 'text/html');
+
+            const nextStats = doc.getElementById('dashboard-stat-cards');
+            const nextLatestVisitors = doc.getElementById('dashboard-latest-visitors-card');
+
+            if (stats && nextStats) stats.innerHTML = nextStats.innerHTML;
+            if (latestVisitors && nextLatestVisitors) latestVisitors.innerHTML = nextLatestVisitors.innerHTML;
+        } catch (err) {
+            console.warn('[DashboardPanels]', err);
+        } finally {
+            busy = false;
+        }
+    }
+
+    return { init: () => setInterval(refresh, 5000) };
+})();
+
+/* ══════════════════════════════════════════════════════════════
+   MODULE 13 · ACTIONS  (block IP)
 ══════════════════════════════════════════════════════════════ */
 const Actions = {
     async blockIp(btn) {
@@ -1277,6 +1310,7 @@ const Actions = {
     AttackMap.init();
     SecurityEvents.init();
     SystemGauges.init();
+    DashboardPanels.init();
 })();
 </script>
 
