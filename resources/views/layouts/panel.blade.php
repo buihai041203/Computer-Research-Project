@@ -236,5 +236,50 @@ SmartPanel
 
 </div>
 
+<script>
+(function () {
+    const autoRefreshPaths = ['dashboard', 'traffic', 'security', 'firewall'];
+    const path = window.location.pathname.replace(/^\//, '').split('/')[0] || 'dashboard';
+
+    if (!autoRefreshPaths.includes(path)) {
+        return;
+    }
+
+    const intervalMs = 5000;
+    let pausedForInput = false;
+
+    const markPause = () => {
+        pausedForInput = true;
+        window.clearTimeout(window.__panelAutoRefreshResumeTimer);
+        window.__panelAutoRefreshResumeTimer = window.setTimeout(() => {
+            pausedForInput = false;
+        }, 15000);
+    };
+
+    document.addEventListener('input', markPause, true);
+    document.addEventListener('submit', markPause, true);
+    document.addEventListener('focusin', (event) => {
+        const tag = (event.target.tagName || '').toLowerCase();
+        if (['input', 'textarea', 'select'].includes(tag)) {
+            markPause();
+        }
+    }, true);
+
+    window.setInterval(() => {
+        if (document.hidden || pausedForInput) {
+            return;
+        }
+
+        const active = document.activeElement;
+        const tag = (active?.tagName || '').toLowerCase();
+        if (['input', 'textarea', 'select'].includes(tag)) {
+            return;
+        }
+
+        window.location.reload();
+    }, intervalMs);
+})();
+</script>
+
 </body>
 </html>
