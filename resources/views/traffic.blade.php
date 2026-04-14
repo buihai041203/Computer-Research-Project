@@ -293,7 +293,7 @@ html, body {
     @endphp
 
     {{-- SUMMARY STRIP --}}
-    <div class="summary-strip">
+    <div class="summary-strip" id="traffic-summary-strip">
         <div class="summary-item">
             <p class="summary-item__val" style="color:var(--text-primary)">{{ number_format($total) }}</p>
             <p class="summary-item__label">Total requests</p>
@@ -434,7 +434,14 @@ html, body {
             });
             const html = await res.text();
             const doc = new DOMParser().parseFromString(html, 'text/html');
+            const nextSummary = doc.getElementById('traffic-summary-strip');
+            const summary = document.getElementById('traffic-summary-strip');
             const nextBody = doc.getElementById('js-tbody');
+
+            if (summary && nextSummary) {
+                summary.innerHTML = nextSummary.innerHTML;
+            }
+
             if (nextBody) {
                 tbody.innerHTML = nextBody.innerHTML;
                 applyLocalTime(tbody);
