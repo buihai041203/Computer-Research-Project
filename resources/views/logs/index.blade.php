@@ -130,12 +130,12 @@ td:last-child, th:last-child {
     padding-top: 0 !important; /* Xóa khoảng trắng trên cùng */
 }
 </style>
-<div class="scc-wrap">
+<div class="scc-wrap" id="logs-page-root">
 <h1 class="page-title">
     System <em>Logs</em>
 </h1>
 
-<div class="bg-white rounded shadow">
+<div class="bg-white rounded shadow" id="logs-table-card">
     <table>
         <thead>
             <tr>
@@ -173,18 +173,48 @@ td:last-child, th:last-child {
 
 <script>
 (function () {
+    const root = document.getElementById('logs-page-root');
+    const card = document.getElementById('logs-table-card');
+    if (!root || !card) return;
+
+    const intervalMs = 5000;
+    let busy = false;
     const formatter = new Intl.DateTimeFormat(undefined, {
         dateStyle: 'medium',
         timeStyle: 'medium',
     });
 
-    document.querySelectorAll('.js-local-datetime').forEach((el) => {
-        const raw = el.dataset.datetime;
-        if (!raw) return;
-        const date = new Date(raw);
-        if (Number.isNaN(date.getTime())) return;
-        el.textContent = formatter.format(date);
-    });
+    function applyLocalTime(scope) {
+        scope.querySelectorAll('.js-local-datetime').forEach((el) => {
+            const raw = el.dataset.datetime;
+            if (!raw) return;
+            const date = new Date(raw);
+            if (Number.isNaN(date.getTime())) return;
+            el.textContent = formatter.format(date);
+        });
+    }
+
+    async function refreshCard() {
+        if (busy || document.hidden) return;
+        busy = true;
+        try {
+            const res = await fetch(window.location.href, { headers: { 'X-Requested-With': 'XMLHttpRequest' } });
+            const html = await res.text();
+            const doc = new DOMParser().parseFromString(html, 'text/html');
+            const next = doc.getElementById('logs-table-card');
+            if (next) {
+                card.innerHTML = next.innerHTML;
+                applyLocalTime(card);
+            }
+        } catch (e) {
+            console.warn('[LogsPageRefresh]', e);
+        } finally {
+            busy = false;
+        }
+    }
+
+    applyLocalTime(card);
+    window.setInterval(refreshCard, intervalMs);
 })();
 </script>
 
