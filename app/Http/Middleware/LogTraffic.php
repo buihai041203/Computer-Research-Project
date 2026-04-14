@@ -47,17 +47,21 @@ class LogTraffic
             abort(403, 'Your IP has been blocked');
         }
 
-        // Bỏ qua request không cần track để tránh spam
+        $domain = $request->getHost();
+        $domainModel = Domain::where('domain', $domain)->first();
+
+        $requestPath = '/' . ltrim($request->path(), '/');
+        $isLoginPath = $requestPath === '/lms/register/login.php' || $requestPath === '/lms/login.php';
+        $isLoginAttempt = $isLoginPath && strtoupper($request->method()) === 'POST';
+
+        // Bỏ qua request không cần track để tránh spam, nhưng vẫn cho phép luồng login POST của LMS đi qua để autoblock
         if (
-            $request->method() !== 'GET' ||
-            !$request->acceptsHtml() ||
+            (!$isLoginAttempt && $request->method() !== 'GET') ||
+            (!$isLoginAttempt && !$request->acceptsHtml()) ||
             preg_match('/\.(css|js|map|png|jpg|jpeg|gif|svg|ico|webp|woff|woff2|ttf|eot|txt|xml)$/i', $request->path())
         ) {
             return $next($request);
         }
-
-        $domain = $request->getHost();
-        $domainModel = Domain::where('domain', $domain)->first();
 
         if (!$domainModel) {
             return $next($request); // host không nằm trong danh sách quản lý
@@ -71,8 +75,8 @@ class LogTraffic
         $agent = $request->userAgent() ?? 'unknown';
         $type = str_contains(strtolower($agent), 'bot') ? 'bot' : 'human';
 
-        // Dedupe trong 10 giây cho cùng IP + UA + domain
-        $duplicated = TrafficLog::query()
+        // Dedupe trong 10 giây cho cùng IP + UA + domain (không áp dụng cho login POST để đếm đủ số lần sai)
+        $duplicated = !$isLoginAttempt && TrafficLog::query()
             ->where('ip', $ip)
             ->where('domain', $domain)
             ->where('user_agent', $agent)
@@ -92,14 +96,21 @@ class LogTraffic
             }
         });
 
+        $response = $next($request);
+        $statusCode = method_exists($response, 'getStatusCode') ? $response->getStatusCode() : 200;
+
         TrafficLog::create([
             'domain_id' => $domainModel->id,
             'domain' => $domain,
+            'request_path' => $requestPath,
+            'status_code' => $statusCode,
             'ip' => $ip,
             'user_agent' => $agent,
             'type' => $type,
             'country' => $country,
         ]);
+
+        $this->handleLoginAutoblock($domainModel->id, $domain, $ip, $requestPath, $isLoginAttempt, $response);
 
         $threat = ThreatAnalyzer::analyze($ip, $type, $country);
         if (($threat['level'] ?? 'LOW') === 'HIGH' || ($threat['level'] ?? 'LOW') === 'CRITICAL') {
@@ -156,7 +167,49 @@ class LogTraffic
             300
         );
 
-        return $next($request);
+        return $response;
+    }
+
+    private function handleLoginAutoblock(int $domainId, string $domain, string $ip, string $requestPath, bool $isLoginAttempt, mixed $response): void
+    {
+        if (!$isLoginAttempt) {
+            return;
+        }
+
+        $location = method_exists($response, 'headers') ? $response->headers->get('Location', '') : '';
+        $isSuccessRedirect = str_contains($location, '/lms/main/')
+            || str_contains($location, '/' . $domain . '/main/')
+            || str_contains($location, '/' . $domain . '/register/manager.php');
+
+        if ($isSuccessRedirect) {
+            return;
+        }
+
+        $maxAttempts = (int) env('FIREWALL_LOGIN_FAIL_BLOCK_THRESHOLD', 5);
+        $windowMinutes = (int) env('FIREWALL_LOGIN_FAIL_WINDOW_MINUTES', 10);
+        $ttlMinutes = (int) env('FIREWALL_LOGIN_FAIL_BLOCK_TTL_MINUTES', 5);
+
+        $failCount = TrafficLog::query()
+            ->where('ip', $ip)
+            ->where('domain_id', $domainId)
+            ->where('request_path', $requestPath)
+            ->where('created_at', '>=', now()->subMinutes($windowMinutes))
+            ->count();
+
+        if ($failCount < $maxAttempts) {
+            return;
+        }
+
+        BlockedIP::updateOrCreate(
+            ['ip' => $ip],
+            ['reason' => "Auto blocked(login): {$domain}, failed login {$failCount} times / {$windowMinutes}m"]
+        );
+
+        $this->sendTelegramOnce(
+            "login_block_{$domainId}_{$ip}",
+            "🚫 LOGIN AUTOBLOCK\nDomain: {$domain}\nIP: {$ip}\nFailed login attempts: {$failCount}\nWindow: {$windowMinutes} minutes\nBlock TTL: {$ttlMinutes} minutes",
+            120
+        );
     }
 
     private function isSystemIp(string $ip): bool
