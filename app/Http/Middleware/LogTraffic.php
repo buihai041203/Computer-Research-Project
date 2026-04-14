@@ -12,6 +12,7 @@ use Closure;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Http;
+use Stevebauman\Location\Facades\Location;
 use App\Http\Controllers\DomainController; // 👉 ĐÃ THÊM: Import Controller để gọi lệnh Nginx
 
 class LogTraffic
@@ -193,6 +194,15 @@ class LogTraffic
 
     private function resolveCountry(string $ip): string
     {
+        try {
+            $position = Location::get($ip);
+            if ($position && !empty($position->countryName)) {
+                return (string) $position->countryName;
+            }
+        } catch (\Throwable $e) {
+            // fall through to direct providers below
+        }
+
         try {
             $geo = Http::timeout(2)->get('http://ip-api.com/json/' . $ip)->json();
             if (($geo['status'] ?? null) === 'success' && !empty($geo['country'])) {
