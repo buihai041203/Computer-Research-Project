@@ -68,7 +68,7 @@ class DomainController extends Controller
                 continue;
             }
 
-            if (preg_match("/['\"]key['\"]\s*=>\s*['\"]([^'\"]+)['\"]/, $content, $m)) {
+            if (preg_match("/['\"]key['\"]\s*=>\s*['\"]([^'\"]+)['\"]/", $content, $m)) {
                 return trim($m[1]);
             }
         }
