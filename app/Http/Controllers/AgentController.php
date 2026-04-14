@@ -2,7 +2,7 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\BlockedIP;
+use App\Models\BlockedIp;
 use App\Models\Domain;
 use App\Models\SecurityEvent;
 use App\Models\TrafficLog;
@@ -25,6 +25,8 @@ class AgentController extends Controller
             'threat' => 'nullable|in:LOW,MEDIUM,HIGH,CRITICAL',
             'event_type' => 'nullable|string|max:100',
             'event_description' => 'nullable|string|max:1000',
+            'login_fail_count' => 'nullable|integer|min:1|max:1000',
+            'login_email' => 'nullable|string|max:255',
             'occurred_at' => 'nullable|date',
         ]);
 
@@ -79,6 +81,40 @@ class AgentController extends Controller
             ]);
         }
 
+        $loginFailThreshold = (int) env('FIREWALL_LOGIN_FAIL_BLOCK_THRESHOLD', 5);
+        $loginFailWindowMinutes = (int) env('FIREWALL_LOGIN_FAIL_WINDOW_MINUTES', 10);
+        $loginFailTtlMinutes = (int) env('FIREWALL_LOGIN_FAIL_BLOCK_TTL_MINUTES', 30);
+
+        if ($request->input('event_type') === 'login_success') {
+            BlockedIp::query()
+                ->where('ip', $ip)
+                ->where('reason', 'like', 'Auto blocked(login):%')
+                ->delete();
+        }
+
+        if ($request->input('event_type') === 'login_failed') {
+            $recentFails = SecurityEvent::query()
+                ->where('ip', $ip)
+                ->where('type', 'login_failed')
+                ->where('created_at', '>=', now()->subMinutes($loginFailWindowMinutes))
+                ->count();
+
+            if (!$isSystemIp && $recentFails >= $loginFailThreshold) {
+                BlockedIp::updateOrCreate(
+                    [
+                        'ip' => $ip,
+                        'scope_type' => 'domain',
+                        'scope_value' => $domain->id,
+                    ],
+                    [
+                        'reason' => "Auto blocked(login): {$domain->domain}, failed login {$recentFails} times / {$loginFailWindowMinutes}m",
+                        'expires_at' => now()->addMinutes($loginFailTtlMinutes),
+                        'source' => 'auto',
+                    ]
+                );
+            }
+        }
+
         $threshold = (int) env('TRAFFIC_BLOCK_THRESHOLD', 120);
         $highRepeat = (int) env('FIREWALL_HIGH_REPEAT', 2);
         $criticalInstant = (bool) env('FIREWALL_CRITICAL_INSTANT_BLOCK', true);
@@ -99,28 +135,46 @@ class AgentController extends Controller
 
         $shouldBlock = false;
         $reason = null;
+        $eventType = (string) $request->input('event_type', '');
+        $isLoginSignal = in_array($eventType, ['login_failed', 'login_success'], true);
 
-        if ($reqPerMin > $threshold) {
-            $shouldBlock = true;
-            $reason = "Auto blocked: {$reqPerMin} req/min > threshold {$threshold}";
-        } elseif ($criticalInstant && $criticalPerMin >= 1) {
-            $shouldBlock = true;
-            $reason = "Auto blocked: CRITICAL threat detected";
-        } elseif ($highThreatPerMin >= $highRepeat) {
-            $shouldBlock = true;
-            $reason = "Auto blocked: HIGH threat repeated {$highThreatPerMin}/min";
+        if (!$isLoginSignal) {
+            if ($reqPerMin > $threshold) {
+                $shouldBlock = true;
+                $reason = "Auto blocked: {$reqPerMin} req/min > threshold {$threshold}";
+            } elseif ($criticalInstant && $criticalPerMin >= 1) {
+                $shouldBlock = true;
+                $reason = "Auto blocked: CRITICAL threat detected";
+            } elseif ($highThreatPerMin >= $highRepeat) {
+                $shouldBlock = true;
+                $reason = "Auto blocked: HIGH threat repeated {$highThreatPerMin}/min";
+            }
         }
 
         if (!$isSystemIp && $shouldBlock) {
-            BlockedIP::firstOrCreate(
-                ['ip' => $ip],
-                ['reason' => $reason]
+            BlockedIp::updateOrCreate(
+                [
+                    'ip' => $ip,
+                    'scope_type' => 'global',
+                    'scope_value' => null,
+                ],
+                [
+                    'reason' => $reason,
+                    'source' => 'auto',
+                ]
             );
         }
 
+        app(\App\Services\BlocklistSyncService::class)->sync();
+
         return response()->json([
             'status' => 'ok',
-            'blocked' => BlockedIP::where('ip', $ip)->exists(),
+            'blocked' => BlockedIp::where('ip', $ip)->where(function ($q) use ($domain) {
+                $q->where('scope_type', 'global')
+                    ->orWhere(function ($sub) use ($domain) {
+                        $sub->where('scope_type', 'domain')->where('scope_value', $domain->id);
+                    });
+            })->exists(),
         ]);
     }
 }
