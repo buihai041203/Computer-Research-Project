@@ -7,6 +7,7 @@ use App\Models\Domain;
 use App\Models\SecurityEvent;
 use App\Models\TrafficLog;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Validator;
 
 class AgentController extends Controller
@@ -112,6 +113,15 @@ class AgentController extends Controller
                         'source' => 'auto',
                     ]
                 );
+
+                $this->sendTelegramDirect(
+                    "🚫 LOGIN AUTOBLOCK\n" .
+                    "Domain: {$domain->domain}\n" .
+                    "IP: {$ip}\n" .
+                    "Failed login attempts: {$recentFails}\n" .
+                    "Window: {$loginFailWindowMinutes} minutes\n" .
+                    "Block TTL: {$loginFailTtlMinutes} minutes"
+                );
             }
         }
 
@@ -163,9 +173,28 @@ class AgentController extends Controller
                     'source' => 'auto',
                 ]
             );
+
+            $this->sendTelegramDirect(
+                "⚠️ ATTACK DETECTED\n" .
+                "Domain: {$domain->domain}\n" .
+                "IP: {$ip}\n" .
+                "Threat: {$threat}\n" .
+                "Reason: {$reason}"
+            );
         }
 
         app(\App\Services\BlocklistSyncService::class)->sync();
+
+        if (in_array($threat, ['HIGH', 'CRITICAL'], true) && $request->filled('event_type')) {
+            $this->sendTelegramDirect(
+                "⚠️ SECURITY EVENT\n" .
+                "Domain: {$domain->domain}\n" .
+                "IP: {$ip}\n" .
+                "Type: " . ($request->input('event_type') ?? 'suspicious_activity') . "\n" .
+                "Threat: {$threat}\n" .
+                "Description: " . ($request->input('event_description') ?? '-')
+            );
+        }
 
         return response()->json([
             'status' => 'ok',
@@ -176,5 +205,24 @@ class AgentController extends Controller
                     });
             })->exists(),
         ]);
+    }
+
+    private function sendTelegramDirect(string $message): void
+    {
+        $botToken = config('services.telegram.token');
+        $chatId = config('services.telegram.chat');
+
+        if (!$botToken || !$chatId) {
+            return;
+        }
+
+        try {
+            Http::timeout(10)->get('https://api.telegram.org/bot' . $botToken . '/sendMessage', [
+                'chat_id' => $chatId,
+                'text' => $message,
+            ]);
+        } catch (\Throwable $e) {
+            // không làm fail luồng collect nếu Telegram lỗi
+        }
     }
 }
