@@ -5,7 +5,7 @@ namespace App\Services;
 use App\Models\TrafficLog;
 use App\Models\SecurityEvent;
 use App\Services\FirewallService;
-use App\Jobs\SendTelegramAlert;
+use Illuminate\Support\Facades\Http;
 
 class SecurityDetector
 {
@@ -36,12 +36,30 @@ class SecurityDetector
                 "Requests: $count\n\n".
                 "Reason: Too many requests";
 
-            // gửi telegram qua queue
-            SendTelegramAlert::dispatch($message);
+            self::sendTelegramDirect($message);
 
             return true;
         }
 
         return false;
+    }
+
+    private static function sendTelegramDirect(string $message): void
+    {
+        $botToken = config('services.telegram.token');
+        $chatId = config('services.telegram.chat');
+
+        if (!$botToken || !$chatId) {
+            return;
+        }
+
+        try {
+            Http::timeout(10)->get('https://api.telegram.org/bot' . $botToken . '/sendMessage', [
+                'chat_id' => $chatId,
+                'text' => $message,
+            ]);
+        } catch (\Throwable $e) {
+            // giữ nguyên hành vi hệ thống: không làm fail luồng detect nếu Telegram lỗi
+        }
     }
 }
