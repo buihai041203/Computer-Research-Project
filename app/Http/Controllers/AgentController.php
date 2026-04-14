@@ -74,7 +74,11 @@ class AgentController extends Controller
             'updated_at' => now(),
         ]);
 
-        if ($request->filled('event_type') || in_array($threat, ['HIGH', 'CRITICAL'], true)) {
+        $eventType = (string) $request->input('event_type', '');
+        $shouldRecordSecurityEvent = ($eventType !== '' && $eventType !== 'login_success')
+            || in_array($threat, ['HIGH', 'CRITICAL'], true);
+
+        if ($shouldRecordSecurityEvent) {
             SecurityEvent::create([
                 'ip' => $ip,
                 'type' => $request->event_type ?? 'suspicious_activity',
@@ -145,7 +149,6 @@ class AgentController extends Controller
 
         $shouldBlock = false;
         $reason = null;
-        $eventType = (string) $request->input('event_type', '');
         $isLoginSignal = in_array($eventType, ['login_failed', 'login_success'], true);
 
         if (!$isLoginSignal) {
@@ -185,7 +188,7 @@ class AgentController extends Controller
 
         app(\App\Services\BlocklistSyncService::class)->sync();
 
-        if (in_array($threat, ['HIGH', 'CRITICAL'], true) && $request->filled('event_type')) {
+        if ($eventType !== 'login_success' && in_array($threat, ['HIGH', 'CRITICAL'], true) && $request->filled('event_type')) {
             $this->sendTelegramDirect(
                 "⚠️ SECURITY EVENT\n" .
                 "Domain: {$domain->domain}\n" .
