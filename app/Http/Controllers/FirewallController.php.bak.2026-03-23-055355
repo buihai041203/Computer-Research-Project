@@ -2,7 +2,7 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\BlockedIP;
+use App\Models\BlockedIp;
 use App\Models\TrafficLog;
 use Illuminate\Http\Request;
 
@@ -10,7 +10,7 @@ class FirewallController extends Controller
 {
     public function index()
     {
-        $ips = BlockedIP::latest()->get();
+        $ips = BlockedIp::latest()->get();
 
         $suspicious = TrafficLog::query()
             ->selectRaw('ip, COUNT(*) as total, SUM(CASE WHEN threat IN ("HIGH","CRITICAL") THEN 1 ELSE 0 END) as risky')
@@ -56,7 +56,7 @@ class FirewallController extends Controller
             return back()->with('error', 'IP này nằm trong whitelist hệ thống, không thể block.');
         }
 
-        BlockedIP::firstOrCreate(
+        BlockedIp::firstOrCreate(
             ['ip' => $data['ip']],
             ['reason' => $data['reason'] ?? 'Manual block from firewall panel']
         );
@@ -81,7 +81,7 @@ class FirewallController extends Controller
 
         $blocked = 0;
         foreach ($candidates as $c) {
-            $created = BlockedIP::firstOrCreate(
+            $created = BlockedIp::firstOrCreate(
                 ['ip' => $c->ip],
                 ['reason' => "Auto blocked: {$c->total} req/min, risky={$c->risky}"]
             );
@@ -95,7 +95,7 @@ class FirewallController extends Controller
 
     public function unblock($id)
     {
-        BlockedIP::findOrFail($id)->delete();
+        BlockedIp::findOrFail($id)->delete();
 
         return back()->with('success', 'IP đã được bỏ chặn.');
     }

@@ -164,14 +164,19 @@ input:focus, textarea:focus {
 
 /* RESULT PRE */
 .query-result {
-    background: #010409;
-    padding: 15px;
-    border-radius: 8px;
-    border: 1px solid var(--border-faint);
-    color: #8b949e;
+    background: linear-gradient(180deg, #020817 0%, #06101f 100%);
+    padding: 18px;
+    border-radius: 10px;
+    border: 1px solid rgba(34, 211, 238, 0.16);
+    color: #f8fafc;
     overflow-x: auto;
     font-family: var(--font-mono);
-    font-size: 12px;
+    font-size: 13px;
+    line-height: 1.75;
+    white-space: pre-wrap;
+    word-break: break-word;
+    text-shadow: 0 0 1px rgba(255,255,255,0.08);
+    box-shadow: inset 0 0 0 1px rgba(255,255,255,0.02);
 }
 </style>
 
@@ -222,16 +227,16 @@ input:focus, textarea:focus {
                     <button type="submit" class="btn btn-primary" style="width:100%">START IMPORT</button>
                 </div>
             </form> --}}
-            <form ... style="height:100%; display:flex; flex-direction:column;">
+            <form method="POST" action="{{ route('databases.import', $domainModel->domain) }}" enctype="multipart/form-data" style="height:100%; display:flex; flex-direction:column;">
                 @csrf
-    <div style="flex:1; display:flex; flex-direction:column; gap:15px;">
-        <input type="file" name="sql_file" accept=".sql,.txt" required style="width:100%">
-    </div>
+                <div style="flex:1; display:flex; flex-direction:column; gap:15px;">
+                    <input type="file" name="sql_file" accept=".sql,.txt" required style="width:100%">
+                </div>
 
-    <button type="submit" class="btn btn-primary" style="width:100%">
-        START IMPORT
-    </button>
-</form>
+                <button type="submit" class="btn btn-primary" style="width:100%">
+                    START IMPORT
+                </button>
+            </form>
         </div>
 
         <div class="db-card">
@@ -241,16 +246,16 @@ input:focus, textarea:focus {
                 
                 <button type="submit" class="btn btn-primary" style="width:100%">EXECUTE QUERY</button>
             </form> --}}
-            <form ... style="height:100%; display:flex; flex-direction:column;">
-    <div style="flex:1;">
-         @csrf
-        <textarea name="sql" rows="3" style="width:100%; margin-bottom:15px; resize:none;" placeholder="SELECT * FROM users LIMIT 10;">{{ old('sql') }}</textarea>
-    </div>
+            <form method="POST" action="{{ route('databases.query', $domainModel->domain) }}" style="height:100%; display:flex; flex-direction:column;">
+                @csrf
+                <div style="flex:1;">
+                    <textarea name="sql" rows="3" style="width:100%; margin-bottom:15px; resize:none;" placeholder="SELECT * FROM users LIMIT 10;">{{ old('sql') }}</textarea>
+                </div>
 
-    <button type="submit" class="btn btn-primary" style="width:100%">
-        EXECUTE QUERY
-    </button>
-</form>
+                <button type="submit" class="btn btn-primary" style="width:100%">
+                    EXECUTE QUERY
+                </button>
+            </form>
         </div>
     </div>
 

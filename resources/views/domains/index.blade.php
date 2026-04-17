@@ -91,8 +91,6 @@ body {
 .btn-delete { color: var(--text-secondary); }
 .btn-delete:hover { color: var(--red); }
 
-/* Hiệu ứng làm mờ dòng khi bị OFF */
-.row-disabled { opacity: 0.5; filter: grayscale(80%); }
 </style>
 
 <div class="scc-wrap" style="max-width: 1200px; margin: 0 auto; padding: 24px;">
@@ -135,14 +133,12 @@ body {
                 </thead>
                 <tbody>
                     @foreach($domains as $domain)
-                    <tr class="{{ !($domain->is_active ?? true) ? 'row-disabled' : '' }}">
+                    <tr>
                         <td class="t-mono" style="color:var(--cyan)">{{ $domain->domain }}</td>
                         <td class="t-mono" style="font-size:11px; color:var(--text-secondary)">{{ $domain->root_path }}</td>
                         <td class="t-mono">{{ $domain->php_version ?? '8.4' }}</td>
                         <td>
-                            @if(!($domain->is_active ?? true))
-                                <span class="badge badge--offline">Offline</span>
-                            @elseif($domain->status == 'pending_setup')
+                            @if($domain->status == 'pending_setup')
                                 <span class="badge badge--pending">Pending</span>
                             @else
                                 <span class="badge badge--active">Active</span>
@@ -150,12 +146,6 @@ body {
                         </td>
                         <td>
                             <div style="display:flex; gap:20px; align-items:center;">
-                                {{-- Nút Toggle dùng GET để tránh 404 --}}
-                                <a href="{{ url('/domains/' . $domain->id . '/toggle') }}" class="action-btn"
-                                   style="color: {{ ($domain->is_active ?? true) ? 'var(--green)' : 'var(--red)' }}">
-                                    {{ ($domain->is_active ?? true) ? '● ON' : '○ OFF' }}
-                                </a>
-
                                 <form action="/domains/{{ $domain->id }}" method="POST" style="margin: 0;" onsubmit="return confirm('Xác nhận xóa domain?');">
                                     @csrf @method('DELETE')
                                     <button type="submit" class="action-btn btn-delete">Delete</button>
