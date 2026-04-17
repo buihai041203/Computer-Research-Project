@@ -1170,6 +1170,12 @@ const AttackMap = (() => {
             const data = await API.get('/api/attack-map');
             map.removeMarkers();
             map.addMarkers(toMarkers(data));
+            const regions = {};
+            data.forEach(row => {
+                const code = String(row.country_code || '').toUpperCase();
+                if (code) regions[code] = Number(row.total);
+            });
+            map.updateSeries([{ attribute: 'fill', values: regions }]);
         } catch (err) {
             console.warn('[AttackMap]', err);
         }

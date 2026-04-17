@@ -5,8 +5,7 @@ namespace App\Http\Middleware;
 use App\Models\BlockedIp;
 use App\Models\Domain;
 use App\Models\TrafficLog;
-use App\Services\FirewallService;
-use App\Services\SecurityDetector;
+use App\Services\TelegramService;
 use App\Services\ThreatAnalyzer;
 use Closure;
 use Illuminate\Http\Request;
@@ -21,7 +20,6 @@ class LogTraffic
     {
         $ip = $request->ip();
 
-        // Panel routes luôn được đi qua để tránh tự khóa admin
         if (
             $request->is('dashboard*') ||
             $request->is('api/*') ||
@@ -38,7 +36,6 @@ class LogTraffic
             return $next($request);
         }
 
-        // Never block local/system/whitelisted IPs
         if ($this->isSystemIp($ip)) {
             return $next($request);
         }
@@ -59,20 +56,54 @@ class LogTraffic
         if (
             (!$isLoginAttempt && $request->method() !== 'GET') ||
             (!$isLoginAttempt && !$request->acceptsHtml()) ||
+        $host = $request->getHost();
+        $requestPath = '/' . ltrim($request->path(), '/');
+
+        $domainModel = Domain::query()->where('domain', $host)->first();
+        if (!$domainModel) {
+            $segments = array_values(array_filter(explode('/', trim($requestPath, '/'))));
+            $siteSlug = $segments[0] ?? null;
+            if ($siteSlug) {
+                $domainModel = Domain::query()->where('domain', $siteSlug)->first();
+            }
+        }
+
+        $domainId = $domainModel?->id;
+
+        $isBlocked = BlockedIp::query()
+            ->where('ip', $ip)
+            ->where(function ($q) use ($domainId) {
+                $q->where('scope_type', 'global')
+                    ->orWhere(function ($dq) use ($domainId) {
+                        $dq->where('scope_type', 'domain')
+                            ->where('scope_value', $domainId ?: -1);
+                    });
+            })
+            ->where(function ($q) {
+                $q->whereNull('expires_at')->orWhere('expires_at', '>', now());
+            })
+            ->exists();
+
+        if ($isBlocked) {
+            abort(403, 'Your IP has been blocked');
+        }
+
+        if (
+            !$request->acceptsHtml() ||
             preg_match('/\.(css|js|map|png|jpg|jpeg|gif|svg|ico|webp|woff|woff2|ttf|eot|txt|xml)$/i', $request->path())
         ) {
             return $next($request);
         }
 
         if (!$domainModel) {
-            return $next($request); // host không nằm trong danh sách quản lý
+            return $next($request);
         }
 
-        // Nếu domain đang tắt thì chặn luôn request (tắt serve ở tầng ứng dụng)
         if (!($domainModel->is_active ?? true)) {
             abort(503, 'This website is temporarily disabled by Security Panel.');
         }
 
+        $domain = $domainModel->domain;
         $agent = $request->userAgent() ?? 'unknown';
         $type = str_contains(strtolower($agent), 'bot') ? 'bot' : 'human';
 
@@ -111,6 +142,12 @@ class LogTraffic
                     $country = 'Unknown';
                     Cache::put($countryCacheKey, $country, now()->addSeconds(2));
                 }
+        $country = Cache::remember("geo_country_{$ip}", now()->addHours(24), function () use ($ip) {
+            try {
+                $geo = Http::timeout(2)->get('http://ip-api.com/json/' . $ip)->json();
+                return $geo['country'] ?? 'Unknown';
+            } catch (\Throwable $e) {
+                return 'Unknown';
             }
         }
 
@@ -141,52 +178,81 @@ class LogTraffic
                 "⚠️ THREAT DETECTED\nIP: {$ip}\nRisk Score: " . ($threat['score'] ?? 0) . "\nThreat Level: " . ($threat['level'] ?? 'LOW'),
                 120
             );
+        $isLoginPath = preg_match('#^/' . preg_quote($domain, '#') . '/register/login\.php$#', $requestPath)
+            || preg_match('#^/' . preg_quote($domain, '#') . '/login\.php$#', $requestPath);
+        $isLoginAttempt = $isLoginPath && strtoupper($request->method()) === 'POST';
+
+        $duplicated = !($isLoginPath && $isLoginAttempt) && TrafficLog::query()
+            ->where('ip', $ip)
+            ->where('domain', $domain)
+            ->where('request_path', $requestPath)
+            ->where('status_code', $statusCode)
+            ->where('user_agent', $agent)
+            ->where('created_at', '>=', now()->subSeconds(5))
+            ->exists();
+
+        if (!$duplicated) {
+            $threat = ThreatAnalyzer::analyze($ip, $type, $country);
+
+            TrafficLog::create([
+                'domain_id' => $domainModel->id,
+                'domain' => $domain,
+                'request_path' => $requestPath,
+                'status_code' => $statusCode,
+                'ip' => $ip,
+                'user_agent' => $agent,
+                'type' => $type,
+                'country' => $country,
+                'threat' => $threat['level'] ?? 'LOW',
+                'source' => 'live',
+            ]);
+
+            $this->handleLoginAutoblock($domainModel->id, $domain, $ip, $requestPath, $isLoginAttempt, $response);
         }
 
-        $requests = TrafficLog::where('ip', $ip)
-            ->where('created_at', '>=', now()->subMinute())
+        return $response;
+    }
+
+    private function handleLoginAutoblock(int $domainId, string $domain, string $ip, string $requestPath, bool $isLoginAttempt, mixed $response): void
+    {
+        if (!$isLoginAttempt) {
+            return;
+        }
+
+        $location = $response->headers->get('Location', '');
+        $isSuccessRedirect = str_contains($location, '/' . $domain . '/register/manager.php')
+            || str_contains($location, '/' . $domain . '/main/');
+
+        if ($isSuccessRedirect) {
+            return;
+        }
+
+        $maxAttempts = (int) env('FIREWALL_LOGIN_FAIL_BLOCK_THRESHOLD', 5);
+        $windowMinutes = (int) env('FIREWALL_LOGIN_FAIL_WINDOW_MINUTES', 10);
+        $ttlMinutes = (int) env('FIREWALL_LOGIN_FAIL_BLOCK_TTL_MINUTES', 5);
+
+        $failCount = TrafficLog::query()
+            ->where('ip', $ip)
+            ->where('domain_id', $domainId)
+            ->where('request_path', $requestPath)
+            ->where('created_at', '>=', now()->subMinutes($windowMinutes))
             ->count();
 
-        $threshold = (int) env('TRAFFIC_BLOCK_THRESHOLD', 120);
-        
-        if ($requests > $threshold) {
-            $reason = "Auto blocked: {$requests} req/min";
-            FirewallService::block($ip, $reason);
-
-            // Auto-disable domain nếu bị tấn công liên tục
-            $windowSeconds = (int) env('AUTO_DISABLE_DOMAIN_WINDOW_SECONDS', 600);
-            $afterBlocks = (int) env('AUTO_DISABLE_DOMAIN_AFTER_BLOCKS', 3);
-            $hitsKey = "domain_attack_hits:{$domainModel->id}";
-            $hits = (int) Cache::get($hitsKey, 0) + 1;
-            Cache::put($hitsKey, $hits, now()->addSeconds($windowSeconds));
-
-            // 👉 ĐÃ NÂNG CẤP: Gọi Lệnh Giật Sập Nginx tại đây
-            if (($domainModel->is_active ?? true) && $hits >= $afterBlocks) {
-                
-                // 1. GỌI HÀM EMERGENCY SHUTDOWN TỪ DOMAIN CONTROLLER (SẬP NGINX THẬT)
-                DomainController::emergencyShutdown($domainModel->domain);
-
-                // 2. Bắn thông báo Telegram khẩn cấp
-                $this->sendTelegramOnce(
-                    "domain_disabled_{$domainModel->id}",
-                    "🚨 NGINX AUTO-OFF KÍCH HOẠT\nDomain: {$domainModel->domain}\nHits: {$hits}/{$afterBlocks}\nReason: Đã cắt đứt Nginx để chống DDoS!",
-                    600
-                );
-            }
-
-            $this->sendTelegramOnce(
-                "attack_{$ip}",
-                "⚠️ ATTACK DETECTED\nIP: {$ip}\nRequests/min: {$requests}\nAction: BLOCKED IP",
-                300
-            );
+        if ($failCount < $maxAttempts) {
+            return;
         }
 
-        SecurityDetector::detect($ip);
-
-        $this->sendTelegramOnce(
-            "visitor_{$ip}",
-            "🚨 New Visitor\nDomain: {$domain}\nIP: {$ip}\nCountry: {$country}\nType: {$type}\nDevice: {$agent}\nTime: " . now(),
-            300
+        BlockedIp::updateOrCreate(
+            [
+                'ip' => $ip,
+                'scope_type' => 'domain',
+                'scope_value' => $domainId,
+            ],
+            [
+                'reason' => "Auto blocked(domain): {$domain}, failed login {$failCount} times / {$windowMinutes}m",
+                'source' => 'auto',
+                'expires_at' => now()->addMinutes($ttlMinutes),
+            ]
         );
 
         return $response;
@@ -309,11 +375,10 @@ class LogTraffic
 
     private function isSystemIp(string $ip): bool
     {
-        if (in_array($ip, ['127.0.0.1', '::1'])) {
+        if (in_array($ip, ['127.0.0.1', '::1'], true)) {
             return true;
         }
 
-        // private ranges + server public IPs (from env)
         if (!filter_var($ip, FILTER_VALIDATE_IP, FILTER_FLAG_NO_PRIV_RANGE | FILTER_FLAG_NO_RES_RANGE)) {
             return true;
         }
@@ -328,22 +393,11 @@ class LogTraffic
             return;
         }
 
-        $botToken = env('TELEGRAM_BOT_TOKEN');
-        $chatId = env('TELEGRAM_CHAT_ID');
-
-        if (!$botToken || !$chatId) {
-            return;
-        }
-
         try {
-            Http::withoutVerifying()->timeout(3)->get(
-                'https://api.telegram.org/bot' . $botToken . '/sendMessage',
-                [
-                    'chat_id' => $chatId,
-                    'text' => $message,
-                ]
-            );
-            Cache::put($cacheKey, true, now()->addSeconds($ttlSeconds));
+            $result = TelegramService::send($message);
+            if (($result['ok'] ?? false) === true) {
+                Cache::put($cacheKey, true, now()->addSeconds($ttlSeconds));
+            }
         } catch (\Throwable $e) {
             // ignore notify errors
         }

@@ -19,6 +19,5 @@ class BlockedIp extends Model
 
     protected $casts = [
         'expires_at' => 'datetime',
-        'reason',
     ];
 }

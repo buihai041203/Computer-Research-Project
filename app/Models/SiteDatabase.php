@@ -32,11 +32,14 @@ class SiteDatabase extends Model
 
     public function getDbPasswordAttribute($value): ?string
     {
-        if (!$value) return null;
+        if (!$value) {
+            return null;
+        }
+
         try {
             return Crypt::decryptString($value);
         } catch (\Throwable $e) {
-            return null;
+            return $value;
         }
     }
 }

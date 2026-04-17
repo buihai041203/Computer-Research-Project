@@ -6,6 +6,7 @@ use App\Models\BlockedIp;
 use App\Models\Domain;
 use App\Models\SecurityEvent;
 use App\Models\TrafficLog;
+use App\Services\TelegramService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Http;
@@ -178,6 +179,7 @@ class AgentController extends Controller
 
         if (!$isSystemIp && $shouldBlock) {
             BlockedIp::updateOrCreate(
+            $entry = BlockedIp::firstOrCreate(
                 [
                     'ip' => $ip,
                     'scope_type' => 'global',
@@ -196,6 +198,14 @@ class AgentController extends Controller
                 "Threat: {$threat}\n" .
                 "Reason: {$reason}"
             );
+
+            if ($entry->wasRecentlyCreated) {
+                $this->sendTelegramOnce(
+                    'traffic_autoblock_' . $ip,
+                    "🚫 TRAFFIC AUTOBLOCK\nDomain: {$domain->domain}\nIP: {$ip}\nReason: {$reason}\nRequests/min: {$reqPerMin}\nHIGH/min: {$highThreatPerMin}\nCRITICAL/min: {$criticalPerMin}",
+                    120
+                );
+            }
         }
 
         app(\App\Services\BlocklistSyncService::class)->sync();
@@ -214,6 +224,12 @@ class AgentController extends Controller
     private function sendSecurityEventTelegram(string $domain, string $ip, string $type, string $description, string $threat): void
     {
         $cacheKey = 'tg_security_event:' . sha1($domain . '|' . $ip . '|' . $type . '|' . $description);
+            'blocked' => BlockedIp::where('ip', $ip)->exists(),
+        ]);
+    }
+
+    private function sendTelegramOnce(string $cacheKey, string $message, int $ttlSeconds = 300): void
+    {
         if (Cache::has($cacheKey)) {
             return;
         }
@@ -246,6 +262,13 @@ class AgentController extends Controller
             ]);
         } catch (\Throwable $e) {
             // không làm fail luồng collect nếu Telegram lỗi
+        try {
+            $result = TelegramService::send($message);
+            if (($result['ok'] ?? false) === true) {
+                Cache::put($cacheKey, true, now()->addSeconds($ttlSeconds));
+            }
+        } catch (\Throwable $e) {
+            // ignore notify errors
         }
     }
 }

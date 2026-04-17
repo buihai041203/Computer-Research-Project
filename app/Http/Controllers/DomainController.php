@@ -1,11 +1,10 @@
 <?php
 
 namespace App\Http\Controllers;
-use Illuminate\Support\Facades\Artisan;
+
 use Illuminate\Http\Request;
 use App\Models\Domain;
 use Illuminate\Support\Str;
-use Illuminate\Support\Facades\Log;
 
 class DomainController extends Controller
 {

@@ -151,6 +151,10 @@ body {
                                     <button type="submit" class="action-btn btn-delete">Delete</button>
                                 </form>
                             </div>
+                            <form action="/domains/{{ $domain->id }}" method="POST" style="margin: 0;" onsubmit="return confirm('Xác nhận xóa domain?');">
+                                @csrf @method('DELETE')
+                                <button type="submit" class="action-btn btn-delete">Delete</button>
+                            </form>
                         </td>
                     </tr>
                     @endforeach

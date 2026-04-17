@@ -40,6 +40,7 @@ class FirewallController extends Controller
                 return $row;
             });
 
+        $ips = BlockedIp::latest()->get();
         $domains = Domain::query()->where('is_active', true)->orderBy('domain')->get(['id', 'domain']);
 
         $activeBlocks = BlockedIp::query()
@@ -154,6 +155,10 @@ class FirewallController extends Controller
         }
 
         return $this->respond($request, true, 'IP đã được block và áp dụng trên Nginx.');
+            return back()->with('error', 'Đã lưu DB và app-level block hoạt động, nhưng sync/verify Nginx lỗi: ' . $sync['message']);
+        }
+
+        return back()->with('success', 'IP đã được block và xác nhận áp dụng trên Nginx.');
     }
 
     public function autoBlock(Request $request)
@@ -165,7 +170,6 @@ class FirewallController extends Controller
         $globalTtlMinutes = (int) env('AUTOBLOCK_GLOBAL_TTL_MINUTES', 60);
         $globalDomainCount = (int) env('AUTOBLOCK_GLOBAL_DOMAIN_COUNT', 3);
 
-        // 1) Domain-scoped autoblock (default)
         $domainCandidates = TrafficLog::query()
             ->selectRaw('ip, domain, COUNT(*) as total,
                 SUM(CASE WHEN threat = "HIGH" THEN 1 ELSE 0 END) as high_count,
@@ -203,7 +207,6 @@ class FirewallController extends Controller
             }
         }
 
-        // 2) Escalate to global if same IP attacks many domains in 10 minutes
         $globalCandidates = TrafficLog::query()
             ->selectRaw('ip, COUNT(DISTINCT domain) as attacked_domains, COUNT(*) as total')
             ->where('created_at', '>=', now()->subMinutes(10))
@@ -233,10 +236,10 @@ class FirewallController extends Controller
 
         $sync = app(BlocklistSyncService::class)->sync();
         if (!$sync['ok']) {
-            return back()->with('error', 'Auto-block đã ghi DB nhưng sync Nginx lỗi: ' . $sync['message']);
+            return back()->with('error', 'Auto-block đã ghi DB/app-level, nhưng sync/verify Nginx lỗi: ' . $sync['message']);
         }
 
-        return back()->with('success', "Auto-block hoàn tất. Domain-block mới: {$blockedDomain}, Global-block mới: {$blockedGlobal}.");
+        return back()->with('success', "Auto-block hoàn tất và đã xác nhận sync Nginx. Domain-block mới: {$blockedDomain}, Global-block mới: {$blockedGlobal}.");
     }
 
     public function unblock($id)
@@ -245,9 +248,9 @@ class FirewallController extends Controller
 
         $sync = app(BlocklistSyncService::class)->sync();
         if (!$sync['ok']) {
-            return back()->with('error', 'Đã bỏ block DB nhưng sync Nginx lỗi: ' . $sync['message']);
+            return back()->with('error', 'Đã bỏ block DB/app-level, nhưng sync/verify Nginx lỗi: ' . $sync['message']);
         }
 
-        return back()->with('success', 'IP đã được bỏ chặn và áp dụng trên Nginx.');
+        return back()->with('success', 'IP đã được bỏ chặn và xác nhận gỡ khỏi Nginx.');
     }
 }

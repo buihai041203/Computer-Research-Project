@@ -195,6 +195,18 @@ input:focus, textarea:focus {
         </div>
     @endif
 
+    @if(session('error'))
+        <div style="color:var(--red); background:rgba(248,113,113,0.1); padding:12px; border-radius:6px; margin-bottom:20px; font-size:14px; border-left:4px solid var(--red);">
+            {{ session('error') }}
+        </div>
+    @endif
+
+    @if(!empty($connectionError))
+        <div style="color:var(--red); background:rgba(248,113,113,0.1); padding:12px; border-radius:6px; margin-bottom:20px; font-size:14px; border-left:4px solid var(--red);">
+            Kết nối DB site lỗi: {{ $connectionError }}
+        </div>
+    @endif
+
     <div class="db-card">
         <h3 class="section-title">Database Configuration</h3>
         <form method="POST" action="{{ route('databases.config', $domainModel->domain) }}">
@@ -228,6 +240,7 @@ input:focus, textarea:focus {
                 </div>
             </form> --}}
             <form method="POST" action="{{ route('databases.import', $domainModel->domain) }}" enctype="multipart/form-data" style="height:100%; display:flex; flex-direction:column;">
+            <form method="POST" action="{{ route('databases.import', $domainModel->domain) }}" enctype="multipart/form-data" style="height:100%; display:flex; flex-direction:column; gap:15px;">
                 @csrf
                 <div style="flex:1; display:flex; flex-direction:column; gap:15px;">
                     <input type="file" name="sql_file" accept=".sql,.txt" required style="width:100%">
