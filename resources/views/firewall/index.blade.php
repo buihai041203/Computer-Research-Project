@@ -176,7 +176,7 @@ html, body {
 
 </style>
 
-<div class="scc-wrap">
+<div class="scc-wrap" id="firewall-page-root">
 
     <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:14px; gap:10px;">
         <h1 class="page-title" style="margin:0;">
@@ -216,171 +216,259 @@ html, body {
         </form>
     </div>
 
-    {{-- SUSPICIOUS IP (last 1h) --}}
-    <div class="card" style="margin-bottom:20px;">
-        <table class="dtable">
-            <thead>
-                <tr>
-                    <th colspan="4">SUSPICIOUS IPs (LAST 1 HOUR)</th>
-                </tr>
-                <tr>
-                    <th>IP ADDRESS</th>
-                    <th>TOTAL REQ</th>
-                    <th>HIGH/CRITICAL</th>
-                    <th>QUICK ACTION</th>
-                </tr>
-            </thead>
-            <tbody>
-            @forelse(($suspicious ?? collect()) as $s)
-                <tr>
-                    <td class="t-mono" style="color:var(--cyan)">{{ $s->ip }}</td>
-                    <td class="t-mono">{{ $s->total }}</td>
-                    <td class="t-mono" style="color:{{ ($s->risky ?? 0) > 0 ? 'var(--red)' : 'var(--text-secondary)' }}">{{ $s->risky ?? 0 }}</td>
-                    <td>
-                        <form method="POST" action="/firewall/block">
-                            @csrf
-                            <input type="hidden" name="ip" value="{{ $s->ip }}">
-                            <input type="hidden" name="reason" value="Manual quick block from suspicious list">
-                            <button class="btn-danger" type="submit">BLOCK</button>
-                        </form>
-                    </td>
-                </tr>
-            @empty
-                <tr>
-                    <td colspan="4" style="text-align:center; padding:20px; font-family:var(--font-mono); color:var(--text-secondary)">
-                        // NO SUSPICIOUS IP DETECTED
-                    </td>
-                </tr>
-            @endforelse
-            </tbody>
-        </table>
-    </div>
-
-    {{-- MULTI-SITE ATTACK MATRIX --}}
-    <div class="card" style="margin-bottom:20px;">
-        <table class="dtable">
-            <thead>
-                <tr>
-                    <th colspan="6">IP ATTACKING WHICH WEBSITE? (LAST 1 HOUR)</th>
-                </tr>
-                <tr>
-                    <th>DOMAIN</th>
-                    <th>IP ADDRESS</th>
-                    <th>TOTAL REQ</th>
-                    <th>HIGH/CRITICAL</th>
-                    <th>LAST SEEN</th>
-                    <th>ACTION</th>
-                </tr>
-            </thead>
-            <tbody>
-            @forelse(($ipByDomain ?? collect()) as $row)
-                <tr>
-                    <td class="t-mono">{{ $row->domain ?? '-' }}</td>
-                    <td class="t-mono" style="color:var(--cyan)">{{ $row->ip }}</td>
-                    <td class="t-mono">{{ $row->total }}</td>
-                    <td class="t-mono" style="color:{{ ($row->risky ?? 0) > 0 ? 'var(--red)' : 'var(--text-secondary)' }}">{{ $row->risky ?? 0 }}</td>
-                    <td class="t-mono">{{ $row->last_seen }}</td>
-                    <td>
-                        <form method="POST" action="/firewall/block">
-                            @csrf
-                            <input type="hidden" name="ip" value="{{ $row->ip }}">
-                            <input type="hidden" name="reason" value="Manual block from IP-by-domain matrix ({{ $row->domain }})">
-                            <button class="btn-danger" type="submit">BLOCK</button>
-                        </form>
-                    </td>
-                </tr>
-            @empty
-                <tr>
-                    <td colspan="6" style="text-align:center; padding:20px; font-family:var(--font-mono); color:var(--text-secondary)">
-                        // NO ATTACK MATRIX DATA
-                    </td>
-                </tr>
-            @endforelse
-            </tbody>
-        </table>
-    </div>
-
-    {{-- DOMAIN ATTACK SUMMARY --}}
-    <div class="card" style="margin-bottom:20px;">
-        <table class="dtable">
-            <thead>
-                <tr>
-                    <th colspan="4">WEBSITE ATTACK SUMMARY (LAST 1 HOUR)</th>
-                </tr>
-                <tr>
-                    <th>DOMAIN</th>
-                    <th>TOTAL REQ</th>
-                    <th>RISKY REQ</th>
-                    <th>DISTINCT ATTACKER IPs</th>
-                </tr>
-            </thead>
-            <tbody>
-            @forelse(($domainAttackSummary ?? collect()) as $row)
-                <tr>
-                    <td class="t-mono">{{ $row->domain ?? '-' }}</td>
-                    <td class="t-mono">{{ $row->total }}</td>
-                    <td class="t-mono" style="color:{{ ($row->risky ?? 0) > 0 ? 'var(--red)' : 'var(--text-secondary)' }}">{{ $row->risky ?? 0 }}</td>
-                    <td class="t-mono">{{ $row->attacker_ips ?? 0 }}</td>
-                </tr>
-            @empty
-                <tr>
-                    <td colspan="4" style="text-align:center; padding:20px; font-family:var(--font-mono); color:var(--text-secondary)">
-                        // NO DOMAIN SUMMARY DATA
-                    </td>
-                </tr>
-            @endforelse
-            </tbody>
-        </table>
-    </div>
-
-    {{-- BLOCKED TABLE --}}
-    <div class="card">
-        <table class="dtable">
-
-            <thead>
-                <tr>
-                    <th>IP ADDRESS</th>
-                    <th>REASON</th>
-                    <th>ACTION</th>
-                </tr>
-            </thead>
-
-            <tbody>
-                @forelse($ips as $ip)
-                <tr>
-
-                    <td class="t-mono" style="color:var(--cyan)">
-                        {{ $ip->ip }}
-                    </td>
-
-                    <td style="color:var(--text-secondary)">
-                        {{ $ip->reason }}
-                    </td>
-
-                    <td>
-                        <form method="POST" action="/firewall/{{ $ip->id }}">
-                            @csrf
-                            @method('DELETE')
-
-                            <button class="btn-success">
-                                UNBLOCK
-                            </button>
-                        </form>
-                    </td>
-
-                </tr>
+    <div id="firewall-live-sections">
+        {{-- SUSPICIOUS IP (last 1h) --}}
+        <div class="card" style="margin-bottom:20px;">
+            <table class="dtable">
+                <thead>
+                    <tr>
+                        <th colspan="4">SUSPICIOUS IPs (LAST 1 HOUR)</th>
+                    </tr>
+                    <tr>
+                        <th>IP ADDRESS</th>
+                        <th>TOTAL REQ</th>
+                        <th>HIGH/CRITICAL</th>
+                        <th>QUICK ACTION</th>
+                    </tr>
+                </thead>
+                <tbody>
+                @forelse(($suspicious ?? collect()) as $s)
+                    <tr>
+                        <td class="t-mono" style="color:var(--cyan)">{{ $s->ip }}</td>
+                        <td class="t-mono">{{ $s->total }}</td>
+                        <td class="t-mono" style="color:{{ ($s->risky ?? 0) > 0 ? 'var(--red)' : 'var(--text-secondary)' }}">{{ $s->risky ?? 0 }}</td>
+                        <td>
+                            @if($s->is_blocked ?? false)
+                                <span class="btn-success" title="{{ $s->blocked_reason ?? 'Đang bị block toàn cục' }}">BLOCKED</span>
+                            @else
+                                <form method="POST" action="/firewall/block">
+                                    @csrf
+                                    <input type="hidden" name="ip" value="{{ $s->ip }}">
+                                    <input type="hidden" name="reason" value="Manual quick block from suspicious list">
+                                    <button class="btn-danger" type="submit">BLOCK</button>
+                                </form>
+                            @endif
+                        </td>
+                    </tr>
                 @empty
-                <tr>
-                    <td colspan="3" style="text-align:center; padding:30px; font-family:var(--font-mono); color:var(--text-secondary)">
-                        // NO BLOCKED IPS
-                    </td>
-                </tr>
+                    <tr>
+                        <td colspan="4" style="text-align:center; padding:20px; font-family:var(--font-mono); color:var(--text-secondary)">
+                            // NO SUSPICIOUS IP DETECTED
+                        </td>
+                    </tr>
                 @endforelse
-            </tbody>
+                </tbody>
+            </table>
+        </div>
 
-        </table>
+        {{-- MULTI-SITE ATTACK MATRIX --}}
+        <div class="card" style="margin-bottom:20px;">
+            <table class="dtable">
+                <thead>
+                    <tr>
+                        <th colspan="6">IP ATTACKING WHICH WEBSITE? (LAST 1 HOUR)</th>
+                    </tr>
+                    <tr>
+                        <th>DOMAIN</th>
+                        <th>IP ADDRESS</th>
+                        <th>TOTAL REQ</th>
+                        <th>HIGH/CRITICAL</th>
+                        <th>LAST SEEN</th>
+                        <th>ACTION</th>
+                    </tr>
+                </thead>
+                <tbody>
+                @forelse(($ipByDomain ?? collect()) as $row)
+                    <tr>
+                        <td class="t-mono">{{ $row->domain ?? '-' }}</td>
+                        <td class="t-mono" style="color:var(--cyan)">{{ $row->ip }}</td>
+                        <td class="t-mono">{{ $row->total }}</td>
+                        <td class="t-mono" style="color:{{ ($row->risky ?? 0) > 0 ? 'var(--red)' : 'var(--text-secondary)' }}">{{ $row->risky ?? 0 }}</td>
+                        <td class="t-mono js-local-datetime" data-datetime="{{ \Illuminate\Support\Carbon::parse($row->last_seen)->toIso8601String() }}">{{ $row->last_seen }}</td>
+                        <td>
+                            @if($row->is_blocked ?? false)
+                                <span class="btn-success" title="{{ $row->blocked_reason ?? 'IP đang bị block' }}">
+                                    BLOCKED{{ ($row->block_scope ?? null) === 'domain' ? ' (DOMAIN)' : (($row->block_scope ?? null) === 'global' ? ' (GLOBAL)' : '') }}
+                                </span>
+                            @else
+                                <form method="POST" action="/firewall/block">
+                                    @csrf
+                                    <input type="hidden" name="ip" value="{{ $row->ip }}">
+                                    <input type="hidden" name="reason" value="Manual block from IP-by-domain matrix ({{ $row->domain }})">
+                                    @if(!empty($row->domain_id))
+                                        <input type="hidden" name="scope_type" value="domain">
+                                        <input type="hidden" name="scope_value" value="{{ $row->domain_id }}">
+                                    @endif
+                                    <button class="btn-danger" type="submit">BLOCK</button>
+                                </form>
+                            @endif
+                        </td>
+                    </tr>
+                @empty
+                    <tr>
+                        <td colspan="6" style="text-align:center; padding:20px; font-family:var(--font-mono); color:var(--text-secondary)">
+                            // NO ATTACK MATRIX DATA
+                        </td>
+                    </tr>
+                @endforelse
+                </tbody>
+            </table>
+        </div>
+
+        {{-- DOMAIN ATTACK SUMMARY --}}
+        <div class="card" style="margin-bottom:20px;">
+            <table class="dtable">
+                <thead>
+                    <tr>
+                        <th colspan="4">WEBSITE ATTACK SUMMARY (LAST 1 HOUR)</th>
+                    </tr>
+                    <tr>
+                        <th>DOMAIN</th>
+                        <th>TOTAL REQ</th>
+                        <th>RISKY REQ</th>
+                        <th>DISTINCT ATTACKER IPs</th>
+                    </tr>
+                </thead>
+                <tbody>
+                @forelse(($domainAttackSummary ?? collect()) as $row)
+                    <tr>
+                        <td class="t-mono">{{ $row->domain ?? '-' }}</td>
+                        <td class="t-mono">{{ $row->total }}</td>
+                        <td class="t-mono" style="color:{{ ($row->risky ?? 0) > 0 ? 'var(--red)' : 'var(--text-secondary)' }}">{{ $row->risky ?? 0 }}</td>
+                        <td class="t-mono">{{ $row->attacker_ips ?? 0 }}</td>
+                    </tr>
+                @empty
+                    <tr>
+                        <td colspan="4" style="text-align:center; padding:20px; font-family:var(--font-mono); color:var(--text-secondary)">
+                            // NO DOMAIN SUMMARY DATA
+                        </td>
+                    </tr>
+                @endforelse
+                </tbody>
+            </table>
+        </div>
+
+        {{-- BLOCKED TABLE --}}
+        <div class="card">
+            <table class="dtable">
+
+                <thead>
+                    <tr>
+                        <th>IP ADDRESS</th>
+                        <th>SCOPE</th>
+                        <th>SOURCE</th>
+                        <th>REASON</th>
+                        <th>ACTION</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+                    @forelse($ips as $ip)
+                    <tr>
+
+                        <td class="t-mono" style="color:var(--cyan)">
+                            {{ $ip->ip }}
+                        </td>
+
+                        <td class="t-mono">
+                            <span style="color:{{ $ip->scope_type === 'domain' ? 'var(--cyan)' : 'var(--green)' }}; font-weight:700;">
+                                {{ $ip->scope_label ?? strtoupper($ip->scope_type ?? 'global') }}
+                            </span>
+                            @if(($ip->scope_type ?? null) === 'domain' && !empty($ip->scope_domain))
+                                <div style="font-size:11px; color:var(--text-secondary); margin-top:4px;">
+                                    {{ $ip->scope_domain }}
+                                </div>
+                            @endif
+                        </td>
+
+                        <td class="t-mono" style="color:var(--text-secondary)">
+                            {{ strtoupper($ip->source ?? 'manual') }}
+                            @if(!empty($ip->expires_at))
+                                <div style="font-size:11px; margin-top:4px;">TTL: <span class="js-local-datetime" data-datetime="{{ optional($ip->expires_at)->toIso8601String() }}">{{ $ip->expires_at }}</span></div>
+                            @endif
+                        </td>
+
+                        <td style="color:var(--text-secondary)">
+                            {{ $ip->reason }}
+                        </td>
+
+                        <td>
+                            <form method="POST" action="/firewall/{{ $ip->id }}">
+                                @csrf
+                                @method('DELETE')
+
+                                <button class="btn-success">
+                                    UNBLOCK
+                                </button>
+                            </form>
+                        </td>
+
+                    </tr>
+                    @empty
+                    <tr>
+                        <td colspan="5" style="text-align:center; padding:30px; font-family:var(--font-mono); color:var(--text-secondary)">
+                            // NO BLOCKED IPS
+                        </td>
+                    </tr>
+                    @endforelse
+                </tbody>
+
+            </table>
+        </div>
     </div>
 
 </div>
+
+<script>
+(function () {
+    const live = document.getElementById('firewall-live-sections');
+    if (!live) return;
+
+    const intervalMs = 2000;
+    let busy = false;
+    const formatter = new Intl.DateTimeFormat(undefined, {
+        dateStyle: 'medium',
+        timeStyle: 'medium',
+    });
+
+    function isEditing() {
+        const active = document.activeElement;
+        const tag = (active?.tagName || '').toLowerCase();
+        return ['input', 'textarea', 'select'].includes(tag);
+    }
+
+    function applyLocalTime(scope) {
+        scope.querySelectorAll('.js-local-datetime').forEach((el) => {
+            const raw = el.dataset.datetime;
+            if (!raw) return;
+            const date = new Date(raw);
+            if (Number.isNaN(date.getTime())) return;
+            el.textContent = formatter.format(date);
+        });
+    }
+
+    async function refreshSections() {
+        if (busy || document.hidden || isEditing()) return;
+        busy = true;
+        try {
+            const res = await fetch(window.location.href, { headers: { 'X-Requested-With': 'XMLHttpRequest' } });
+            const html = await res.text();
+            const doc = new DOMParser().parseFromString(html, 'text/html');
+            const next = doc.getElementById('firewall-live-sections');
+            if (next) {
+                live.innerHTML = next.innerHTML;
+                applyLocalTime(live);
+            }
+        } catch (e) {
+            console.warn('[FirewallPageRefresh]', e);
+        } finally {
+            busy = false;
+        }
+    }
+
+    applyLocalTime(live);
+    window.setInterval(refreshSections, intervalMs);
+})();
+</script>
 
 @endsection

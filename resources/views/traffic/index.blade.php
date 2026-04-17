@@ -39,6 +39,7 @@ table {
     width: 100%;
     border-collapse: separate;
     border-spacing: 0 10px; 
+}
 
 thead th {
     color: #38bdf8; 
@@ -97,55 +98,103 @@ tbody tr:hover td {
 }
 </style>
 
-<div class="mb-8 flex justify-between items-center">
-    <div>
-        <h1 class="page-title">Traffic Monitoring</h1>
-        <p class="text-gray-400 text-sm mt-1">Analyzing incoming web requests in real-time</p>
+<div id="traffic-page-root">
+    <div class="mb-8 flex justify-between items-center">
+        <div>
+            <h1 class="page-title">Traffic Monitoring</h1>
+            <p class="text-gray-400 text-sm mt-1">Analyzing incoming web requests in real-time</p>
+        </div>
+        <div class="flex items-center gap-2 text-xs text-green-400 font-bold uppercase tracking-widest">
+            <span class="live-indicator" style="width:8px; height:8px; background:#10b981; border-radius:50%; display:inline-block; box-shadow: 0 0 8px #10b981; animation: pulse 1.5s infinite;"></span>
+            Live Stream
+        </div>
     </div>
-    <div class="flex items-center gap-2 text-xs text-green-400 font-bold uppercase tracking-widest">
-        <span class="live-indicator" style="width:8px; height:8px; background:#10b981; border-radius:50%; display:inline-block; box-shadow: 0 0 8px #10b981; animation: pulse 1.5s infinite;"></span>
-        Live Stream
+
+    <div class="glass-panel" id="traffic-table-card">
+        <table>
+            <thead>
+                <tr>
+                    <th>IP Address</th>
+                    <th>Target Domain</th>
+                    <th>Entity Type</th>
+                    <th>Request Time</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach($logs as $log)
+                <tr>
+                    <td class="font-mono-tech">{{ $log->ip }}</td>
+                    <td>
+                        <span class="opacity-70 mr-1">🌐</span> {{ $log->domain }}
+                    </td>
+                    <td>
+                        @if($log->type == 'bot')
+                            <span class="badge badge-bot"> BOT</span>
+                        @else
+                            <span class="badge badge-human"> HUMAN</span>
+                        @endif
+                    </td>
+                    <td class="text-gray-400 text-xs js-local-datetime" data-datetime="{{ optional($log->created_at)->toIso8601String() }}">
+                        {{ $log->created_at->diffForHumans() }}
+                    </td>
+                </tr>
+                @endforeach
+                
+                @if($logs->isEmpty())
+                <tr>
+                    <td colspan="4" class="text-center py-10 opacity-50 italic">No traffic data detected yet.</td>
+                </tr>
+                @endif
+            </tbody>
+        </table>
     </div>
 </div>
 
-<div class="glass-panel">
-    <table>
-        <thead>
-            <tr>
-                <th>IP Address</th>
-                <th>Target Domain</th>
-                <th>Entity Type</th>
-                <th>Request Time</th>
-            </tr>
-        </thead>
-        <tbody>
-            @foreach($logs as $log)
-            <tr>
-                <td class="font-mono-tech">{{ $log->ip }}</td>
-                <td>
-                    <span class="opacity-70 mr-1">🌐</span> {{ $log->domain }}
-                </td>
-                <td>
-                    @if($log->type == 'bot')
-                        <span class="badge badge-bot"> BOT</span>
-                    @else
-                        <span class="badge badge-human"> HUMAN</span>
-                    @endif
-                </td>
-                <td class="text-gray-400 text-xs">
-                    {{ $log->created_at->diffForHumans() }}
-                </td>
-            </tr>
-            @endforeach
-            
-            @if($logs->isEmpty())
-            <tr>
-                <td colspan="4" class="text-center py-10 opacity-50 italic">No traffic data detected yet.</td>
-            </tr>
-            @endif
-        </tbody>
-    </table>
-</div>
+<script>
+(function () {
+    const card = document.getElementById('traffic-table-card');
+    if (!card) return;
+
+    const intervalMs = 5000;
+    let busy = false;
+    const formatter = new Intl.DateTimeFormat(undefined, {
+        dateStyle: 'medium',
+        timeStyle: 'medium',
+    });
+
+    function applyLocalTime(scope) {
+        scope.querySelectorAll('.js-local-datetime').forEach((el) => {
+            const raw = el.dataset.datetime;
+            if (!raw) return;
+            const date = new Date(raw);
+            if (Number.isNaN(date.getTime())) return;
+            el.textContent = formatter.format(date);
+        });
+    }
+
+    async function refreshCard() {
+        if (busy || document.hidden) return;
+        busy = true;
+        try {
+            const res = await fetch(window.location.href, { headers: { 'X-Requested-With': 'XMLHttpRequest' } });
+            const html = await res.text();
+            const doc = new DOMParser().parseFromString(html, 'text/html');
+            const next = doc.getElementById('traffic-table-card');
+            if (next) {
+                card.innerHTML = next.innerHTML;
+                applyLocalTime(card);
+            }
+        } catch (e) {
+            console.warn('[TrafficPageRefresh]', e);
+        } finally {
+            busy = false;
+        }
+    }
+
+    applyLocalTime(card);
+    window.setInterval(refreshCard, intervalMs);
+})();
+</script>
 
 @keyframes pulse {
     0% { transform: scale(0.9); opacity: 0.7; }

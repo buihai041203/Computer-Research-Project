@@ -1,8 +1,8 @@
 <?php
 
 namespace App\Http\Controllers;
+
 use App\Models\TrafficLog;
-use Illuminate\Http\Request;
 
 class LogController extends Controller
 {
@@ -10,6 +10,6 @@ class LogController extends Controller
     {
         $logs = TrafficLog::latest()->limit(200)->get();
 
-        return view('logs.index',compact('logs'));
+        return view('logs.index', compact('logs'));
     }
 }

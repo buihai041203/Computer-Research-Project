@@ -293,7 +293,7 @@ html, body {
     @endphp
 
     {{-- SUMMARY STRIP --}}
-    <div class="summary-strip">
+    <div class="summary-strip" id="traffic-summary-strip">
         <div class="summary-item">
             <p class="summary-item__val" style="color:var(--text-primary)">{{ number_format($total) }}</p>
             <p class="summary-item__label">Total requests</p>
@@ -367,33 +367,54 @@ html, body {
 </div>
 
 <script>
-// Giữ nguyên logic JS của bạn không thay đổi
 'use strict';
-(function initLogFilter() {
+(function initTrafficPage() {
+    const root = document.querySelector('.scc-wrap');
+    const table = document.getElementById('js-log-table');
     const tbody = document.getElementById('js-tbody');
     const searchInput = document.getElementById('js-search');
     const filterBtns = document.querySelectorAll('[data-filter]');
-    const rows = Array.from(tbody.querySelectorAll('tr[data-type]'));
+    if (!root || !table || !tbody || !searchInput || !filterBtns.length) return;
+
     let activeFilter = 'all';
     let searchQuery = '';
+    let busy = false;
+    const intervalMs = 2000;
+    const formatter = new Intl.DateTimeFormat(undefined, {
+        dateStyle: 'medium',
+        timeStyle: 'medium',
+    });
+
+    function applyLocalTime(scope) {
+        scope.querySelectorAll('.js-local-datetime').forEach((el) => {
+            const raw = el.dataset.datetime;
+            if (!raw) return;
+            const date = new Date(raw);
+            if (Number.isNaN(date.getTime())) return;
+            el.textContent = formatter.format(date);
+        });
+    }
 
     function applyFilters() {
-        let visibleCount = 0;
-        rows.forEach(row => {
+        const rows = Array.from(tbody.querySelectorAll('tr[data-type]'));
+        let n = 1;
+        rows.forEach((row) => {
             const matchType = activeFilter === 'all' || row.dataset.type === activeFilter;
-            const searchTarget = (row.dataset.ip + ' ' + row.dataset.country).toLowerCase();
+            const searchTarget = ((row.dataset.ip || '') + ' ' + (row.dataset.country || '')).toLowerCase();
             const matchSearch = !searchQuery || searchTarget.includes(searchQuery);
             const show = matchType && matchSearch;
             row.style.display = show ? '' : 'none';
-            if (show) visibleCount++;
+            if (show) {
+                const idx = row.cells[0];
+                if (idx) idx.textContent = String(n++).padStart(3, '0');
+            }
         });
-        renumberRows();
     }
 
-    filterBtns.forEach(btn => {
+    filterBtns.forEach((btn) => {
         btn.addEventListener('click', () => {
             activeFilter = btn.dataset.filter;
-            filterBtns.forEach(b => b.classList.remove('active'));
+            filterBtns.forEach((b) => b.classList.remove('active'));
             btn.classList.add('active');
             applyFilters();
         });
@@ -404,15 +425,39 @@ html, body {
         applyFilters();
     });
 
-    function renumberRows() {
-        let n = 1;
-        rows.forEach(row => {
-            if (row.style.display !== 'none') {
-                const idx = row.cells[0];
-                if (idx) idx.textContent = String(n++).padStart(3, '0');
+    async function refreshTable() {
+        if (busy || document.hidden) return;
+        busy = true;
+        try {
+            const res = await fetch(window.location.href, {
+                headers: { 'X-Requested-With': 'XMLHttpRequest' },
+            });
+            const html = await res.text();
+            const doc = new DOMParser().parseFromString(html, 'text/html');
+            const nextSummary = doc.getElementById('traffic-summary-strip');
+            const summary = document.getElementById('traffic-summary-strip');
+            const nextBody = doc.getElementById('js-tbody');
+
+            if (summary && nextSummary) {
+                summary.innerHTML = nextSummary.innerHTML;
             }
-        });
+
+            if (nextBody) {
+                tbody.innerHTML = nextBody.innerHTML;
+                applyLocalTime(tbody);
+                applyFilters();
+            }
+        } catch (e) {
+            console.warn('[TrafficPageRefresh]', e);
+        } finally {
+            busy = false;
+        }
     }
+
+    applyLocalTime(root);
+    applyFilters();
+    refreshTable();
+    window.setInterval(refreshTable, intervalMs);
 })();
 </script>
 

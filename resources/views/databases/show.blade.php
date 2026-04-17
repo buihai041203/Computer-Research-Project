@@ -164,14 +164,19 @@ input:focus, textarea:focus {
 
 /* RESULT PRE */
 .query-result {
-    background: #010409;
-    padding: 15px;
-    border-radius: 8px;
-    border: 1px solid var(--border-faint);
-    color: #8b949e;
+    background: linear-gradient(180deg, #020817 0%, #06101f 100%);
+    padding: 18px;
+    border-radius: 10px;
+    border: 1px solid rgba(34, 211, 238, 0.16);
+    color: #f8fafc;
     overflow-x: auto;
     font-family: var(--font-mono);
-    font-size: 12px;
+    font-size: 13px;
+    line-height: 1.75;
+    white-space: pre-wrap;
+    word-break: break-word;
+    text-shadow: 0 0 1px rgba(255,255,255,0.08);
+    box-shadow: inset 0 0 0 1px rgba(255,255,255,0.02);
 }
 </style>
 
@@ -227,6 +232,14 @@ input:focus, textarea:focus {
     <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 24px;">
         <div class="db-card">
             <h3 class="section-title">Import SQL</h3>
+            {{-- <form method="POST" action="{{ route('databases.import', $domainModel->domain) }}" enctype="multipart/form-data">
+                
+                <div style="display:flex; flex-direction:column; gap:15px;">
+                    <input type="file" >
+                    <button type="submit" class="btn btn-primary" style="width:100%">START IMPORT</button>
+                </div>
+            </form> --}}
+            <form method="POST" action="{{ route('databases.import', $domainModel->domain) }}" enctype="multipart/form-data" style="height:100%; display:flex; flex-direction:column;">
             <form method="POST" action="{{ route('databases.import', $domainModel->domain) }}" enctype="multipart/form-data" style="height:100%; display:flex; flex-direction:column; gap:15px;">
                 @csrf
                 <div style="flex:1; display:flex; flex-direction:column; gap:15px;">
@@ -241,6 +254,11 @@ input:focus, textarea:focus {
 
         <div class="db-card">
             <h3 class="section-title">SQL Console</h3>
+            {{-- <form method="POST" action="{{ route('databases.query', $domainModel->domain) }}">
+               
+                
+                <button type="submit" class="btn btn-primary" style="width:100%">EXECUTE QUERY</button>
+            </form> --}}
             <form method="POST" action="{{ route('databases.query', $domainModel->domain) }}" style="height:100%; display:flex; flex-direction:column;">
                 @csrf
                 <div style="flex:1;">

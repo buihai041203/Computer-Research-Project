@@ -10,10 +10,53 @@ use Illuminate\Http\Request;
 
 class FirewallController extends Controller
 {
+    private function respond(Request $request, bool $ok, string $message, int $status = 200)
+    {
+        if ($request->expectsJson() || $request->ajax()) {
+            return response()->json([
+                'ok' => $ok,
+                'message' => $message,
+            ], $status);
+        }
+
+        return back()->with($ok ? 'success' : 'error', $message);
+    }
+
     public function index()
     {
+        $ips = BlockedIp::query()
+            ->latest()
+            ->get()
+            ->map(function ($row) {
+                $row->scope_label = $row->scope_type === 'domain'
+                    ? 'DOMAIN'
+                    : 'GLOBAL';
+
+                $row->scope_domain = null;
+                if ($row->scope_type === 'domain' && !empty($row->scope_value)) {
+                    $row->scope_domain = Domain::query()->where('id', $row->scope_value)->value('domain');
+                }
+
+                return $row;
+            });
+
         $ips = BlockedIp::latest()->get();
         $domains = Domain::query()->where('is_active', true)->orderBy('domain')->get(['id', 'domain']);
+
+        $activeBlocks = BlockedIp::query()
+            ->where(function ($q) {
+                $q->whereNull('expires_at')->orWhere('expires_at', '>', now());
+            })
+            ->get();
+
+        $globalBlockedIps = $activeBlocks
+            ->where('scope_type', 'global')
+            ->pluck('reason', 'ip');
+
+        $domainBlockedIps = $activeBlocks
+            ->where('scope_type', 'domain')
+            ->groupBy('scope_value')
+            ->map(fn ($items) => $items->pluck('reason', 'ip'));
 
         $suspicious = TrafficLog::query()
             ->selectRaw('ip, COUNT(*) as total, SUM(CASE WHEN threat IN ("HIGH","CRITICAL") THEN 1 ELSE 0 END) as risky')
@@ -22,7 +65,14 @@ class FirewallController extends Controller
             ->orderByDesc('risky')
             ->orderByDesc('total')
             ->limit(10)
-            ->get();
+            ->get()
+            ->map(function ($row) use ($globalBlockedIps) {
+                $row->is_blocked = $globalBlockedIps->has($row->ip);
+                $row->blocked_reason = $globalBlockedIps->get($row->ip);
+                return $row;
+            });
+
+        $domainMap = $domains->pluck('id', 'domain');
 
         $ipByDomain = TrafficLog::query()
             ->selectRaw('domain, ip, COUNT(*) as total, SUM(CASE WHEN threat IN ("HIGH","CRITICAL") THEN 1 ELSE 0 END) as risky, MAX(created_at) as last_seen')
@@ -31,7 +81,20 @@ class FirewallController extends Controller
             ->orderByDesc('risky')
             ->orderByDesc('total')
             ->limit(100)
-            ->get();
+            ->get()
+            ->map(function ($row) use ($domainMap, $globalBlockedIps, $domainBlockedIps) {
+                $domainId = $domainMap->get($row->domain);
+                $domainReasons = $domainId ? ($domainBlockedIps->get($domainId) ?? collect()) : collect();
+                $globalReason = $globalBlockedIps->get($row->ip);
+                $domainReason = $domainReasons->get($row->ip);
+
+                $row->domain_id = $domainId;
+                $row->is_blocked = filled($globalReason) || filled($domainReason);
+                $row->block_scope = $globalReason ? 'global' : ($domainReason ? 'domain' : null);
+                $row->blocked_reason = $globalReason ?: $domainReason;
+
+                return $row;
+            });
 
         $domainAttackSummary = TrafficLog::query()
             ->selectRaw('domain, COUNT(*) as total, SUM(CASE WHEN threat IN ("HIGH","CRITICAL") THEN 1 ELSE 0 END) as risky, COUNT(DISTINCT ip) as attacker_ips')
@@ -57,7 +120,7 @@ class FirewallController extends Controller
 
         $whitelist = array_filter(array_map('trim', explode(',', (string) env('FIREWALL_WHITELIST_IPS', '127.0.0.1,::1'))));
         if (in_array($data['ip'], $whitelist, true)) {
-            return back()->with('error', 'IP này nằm trong whitelist hệ thống, không thể block.');
+            return $this->respond($request, false, 'IP này nằm trong whitelist hệ thống, không thể block.', 422);
         }
 
         $scopeType = $data['scope_type'] ?? 'global';
@@ -66,7 +129,7 @@ class FirewallController extends Controller
         if ($scopeType === 'domain') {
             $scopeValue = (int) ($data['scope_value'] ?? 0);
             if ($scopeValue <= 0 || !Domain::query()->where('id', $scopeValue)->exists()) {
-                return back()->with('error', 'Domain scope không hợp lệ.');
+                return $this->respond($request, false, 'Domain scope không hợp lệ.', 422);
             }
         }
 
@@ -88,6 +151,10 @@ class FirewallController extends Controller
 
         $sync = app(BlocklistSyncService::class)->sync();
         if (!$sync['ok']) {
+            return $this->respond($request, false, 'Đã lưu DB nhưng sync Nginx lỗi: ' . $sync['message'], 500);
+        }
+
+        return $this->respond($request, true, 'IP đã được block và áp dụng trên Nginx.');
             return back()->with('error', 'Đã lưu DB và app-level block hoạt động, nhưng sync/verify Nginx lỗi: ' . $sync['message']);
         }
 

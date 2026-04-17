@@ -159,7 +159,7 @@ body {
 }
 </style>
 
-<div class="scc-wrap">
+<div class="scc-wrap" id="security-page-root">
 
     <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:14px;">
         <h1 class="page-title" style="margin-bottom:0;">
@@ -182,7 +182,7 @@ body {
         <div style="color:var(--red); margin-bottom:10px; font-family:var(--font-mono); font-size:11px;">{{ session('error') }}</div>
     @endif
 
-    <div class="card">
+    <div class="card" id="security-events-card">
         <table class="dtable">
             <thead>
                 <tr>
@@ -208,7 +208,7 @@ body {
                         {{ $event->description }}
                     </td>
 
-                    <td class="t-mono" style="color: var(--text-secondary)">
+                    <td class="t-mono js-local-datetime" style="color: var(--text-secondary)" data-datetime="{{ optional($event->created_at)->toIso8601String() }}">
                         {{ $event->created_at }}
                     </td>
                 </tr>
@@ -224,5 +224,52 @@ body {
     </div>
 
 </div>
+
+<script>
+(function () {
+    const root = document.getElementById('security-page-root');
+    const card = document.getElementById('security-events-card');
+    if (!root || !card) return;
+
+    const intervalMs = 2000;
+    let busy = false;
+    const formatter = new Intl.DateTimeFormat(undefined, {
+        dateStyle: 'medium',
+        timeStyle: 'medium',
+    });
+
+    function applyLocalTime(scope) {
+        scope.querySelectorAll('.js-local-datetime').forEach((el) => {
+            const raw = el.dataset.datetime;
+            if (!raw) return;
+            const date = new Date(raw);
+            if (Number.isNaN(date.getTime())) return;
+            el.textContent = formatter.format(date);
+        });
+    }
+
+    async function refreshCard() {
+        if (busy || document.hidden) return;
+        busy = true;
+        try {
+            const res = await fetch(window.location.href, { headers: { 'X-Requested-With': 'XMLHttpRequest' } });
+            const html = await res.text();
+            const doc = new DOMParser().parseFromString(html, 'text/html');
+            const next = doc.getElementById('security-events-card');
+            if (next) {
+                card.innerHTML = next.innerHTML;
+                applyLocalTime(card);
+            }
+        } catch (e) {
+            console.warn('[SecurityPageRefresh]', e);
+        } finally {
+            busy = false;
+        }
+    }
+
+    applyLocalTime(root);
+    window.setInterval(refreshCard, intervalMs);
+})();
+</script>
 
 @endsection

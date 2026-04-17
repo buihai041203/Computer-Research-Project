@@ -576,7 +576,7 @@ body {
 </header>
 
 {{-- ── STAT CARDS ───────────────────────── --}}
-<div class="g-3" role="region" aria-label="Traffic statistics">
+<div class="g-3" role="region" aria-label="Traffic statistics" id="dashboard-stat-cards">
 
     <div class="card stat stat--cyan" aria-label="Total visitors">
         <span class="stat__orb" aria-hidden="true"></span>
@@ -746,7 +746,7 @@ body {
     </div>
 
     {{-- RIGHT: LATEST VISITORS --}}
-    <div class="card">
+    <div class="card" id="dashboard-latest-visitors-card">
         <div class="card__header">
             <span class="t-section">Latest Visitors</span>
             <span class="t-label">{{ count($latestVisitors) }} entries</span>
@@ -1017,7 +1017,7 @@ const TrafficChart = (() => {
         }
     }
 
-    return { init: () => { refresh(); return setInterval(refresh, 5000); } };
+    return { init: () => { refresh(); return setInterval(refresh, 2000); } };
 })();
 
 /* ══════════════════════════════════════════════════════════════
@@ -1095,6 +1095,24 @@ const CountryTable = (() => {
    MODULE 9 · ATTACK MAP (jsVectorMap)
 ══════════════════════════════════════════════════════════════ */
 const AttackMap = (() => {
+    const COUNTRY_COORDS = {
+        'Vietnam':        { name: 'Vietnam', coords: [108.2772, 14.0583] },
+        'United States':  { name: 'United States', coords: [-98.5795, 39.8283] },
+        'China':          { name: 'China', coords: [104.1954, 35.8617] },
+        'Singapore':      { name: 'Singapore', coords: [103.8198, 1.3521] },
+        'Russia':         { name: 'Russia', coords: [105.3188, 61.5240] },
+        'Germany':        { name: 'Germany', coords: [10.4515, 51.1657] },
+        'France':         { name: 'France', coords: [2.2137, 46.2276] },
+        'Japan':          { name: 'Japan', coords: [138.2529, 36.2048] },
+        'South Korea':    { name: 'South Korea', coords: [127.7669, 35.9078] },
+        'India':          { name: 'India', coords: [78.9629, 20.5937] },
+        'Brazil':         { name: 'Brazil', coords: [-51.9253, -14.2350] },
+        'United Kingdom': { name: 'United Kingdom', coords: [-3.4360, 55.3781] },
+        'Netherlands':    { name: 'Netherlands', coords: [5.2913, 52.1326] },
+        'Canada':         { name: 'Canada', coords: [-106.3468, 56.1304] },
+        'Australia':      { name: 'Australia', coords: [133.7751, -25.2744] },
+    };
+
     const map = new jsVectorMap({
         selector: '#attackMap',
         map: 'world',
@@ -1105,19 +1123,53 @@ const AttackMap = (() => {
             hover:    { fill: '#1a3050', cursor: 'default' },
             selected: { fill: '#22d3ee' },
         },
-        series: {
-            regions: [{
-                attribute: 'fill',
-                scale: { min: '#152540', max: '#f87171' },
-                normalizeFunction: 'polynomial',
-                values: {},
-            }],
+        markersSelectable: false,
+        markers: [],
+        markerStyle: {
+            initial: {
+                fill: '#ef4444',
+                stroke: 'rgba(255,255,255,.45)',
+                strokeWidth: 1.5,
+                r: 6,
+            },
+            hover: {
+                fill: '#f87171',
+                stroke: '#ffffff',
+                strokeWidth: 2,
+            },
         },
     });
+
+    function toMarkers(rows) {
+        const maxTotal = Math.max(...rows.map(row => Number(row.total) || 0), 1);
+
+        return rows
+            .map(row => {
+                const country = COUNTRY_COORDS[row.country];
+                if (!country) return null;
+
+                const total = Number(row.total) || 0;
+                const radius = Math.max(5, Math.min(18, 5 + (total / maxTotal) * 13));
+
+                return {
+                    name: `${country.name}: ${total} visitors`,
+                    coords: country.coords,
+                    style: {
+                        r: radius,
+                        fill: '#ef4444',
+                        stroke: 'rgba(255,255,255,.45)',
+                        strokeWidth: 1.5,
+                    },
+                };
+            })
+            .filter(Boolean);
+    }
 
     async function refresh() {
         try {
             const data = await API.get('/api/attack-map');
+            map.removeMarkers();
+            map.addMarkers(toMarkers(data));
             const regions = {};
             data.forEach(row => {
                 const code = String(row.country_code || '').toUpperCase();
@@ -1164,7 +1216,7 @@ const SecurityEvents = (() => {
         }
     }
 
-    return { init: () => { refresh(); return setInterval(refresh, 5000); } };
+    return { init: () => { refresh(); return setInterval(refresh, 2000); } };
 })();
 
 /* ══════════════════════════════════════════════════════════════
@@ -1222,7 +1274,45 @@ const SystemGauges = (() => {
 })();
 
 /* ══════════════════════════════════════════════════════════════
-   MODULE 12 · ACTIONS  (block IP)
+   MODULE 12 · DASHBOARD PARTIAL REFRESH
+══════════════════════════════════════════════════════════════ */
+const DashboardPanels = (() => {
+    const stats = document.getElementById('dashboard-stat-cards');
+    const latestVisitors = document.getElementById('dashboard-latest-visitors-card');
+    let busy = false;
+
+    async function refresh() {
+        if (busy || document.hidden) return;
+        busy = true;
+        try {
+            const res = await fetch(window.location.href, {
+                headers: { 'X-Requested-With': 'XMLHttpRequest' },
+            });
+            const html = await res.text();
+            const doc = new DOMParser().parseFromString(html, 'text/html');
+
+            const nextStats = doc.getElementById('dashboard-stat-cards');
+            const nextLatestVisitors = doc.getElementById('dashboard-latest-visitors-card');
+
+            if (stats && nextStats) stats.innerHTML = nextStats.innerHTML;
+            if (latestVisitors && nextLatestVisitors) latestVisitors.innerHTML = nextLatestVisitors.innerHTML;
+        } catch (err) {
+            console.warn('[DashboardPanels]', err);
+        } finally {
+            busy = false;
+        }
+    }
+
+    return {
+        init: () => {
+            refresh();
+            return setInterval(refresh, 2000);
+        }
+    };
+})();
+
+/* ══════════════════════════════════════════════════════════════
+   MODULE 13 · ACTIONS  (block IP)
 ══════════════════════════════════════════════════════════════ */
 const Actions = {
     async blockIp(btn) {
@@ -1259,6 +1349,7 @@ const Actions = {
     AttackMap.init();
     SecurityEvents.init();
     SystemGauges.init();
+    DashboardPanels.init();
 })();
 </script>
 
